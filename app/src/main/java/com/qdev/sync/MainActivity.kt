@@ -1,13 +1,18 @@
 package com.qdev.pro
 
 import android.content.*
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.WindowInsetsController
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import com.qdev.pro.databinding.ActivityMainBinding
 import okhttp3.*
 import java.io.IOException
@@ -28,6 +33,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Full screen & Transparent Status Bar logic
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        }
+        
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
@@ -50,8 +66,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupWebView() {
         val webView = binding.webView
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
+        val ws = webView.settings
+        ws.javaScriptEnabled = true
+        ws.domStorageEnabled = true
+        ws.allowFileAccess = true
+        ws.allowContentAccess = true
+        ws.loadWithOverviewMode = true
+        ws.useWideViewPort = true
+        ws.builtInZoomControls = false
+        ws.displayZoomControls = false
+        ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = WebChromeClient()
 
