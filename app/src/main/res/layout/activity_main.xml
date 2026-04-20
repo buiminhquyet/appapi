@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="QDev Sync"
+            android:text="QDev Pro"
             android:textColor="#f8fafc"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -22,8 +22,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PHIÊN BẢN V7.5 - QDev Sync PRO"
-            android:textColor="#38bdf8"
+            android:text="HỆ THỐNG FORWARDER - V7.5"
+            android:textColor="#10b981"
             android:textSize="12sp"
             android:letterSpacing="0.1"
             android:textStyle="bold"
@@ -71,7 +71,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CẤU HÌNH WEBHOOK"
+                android:text="CẤU HÌNH WEBHOOK (SERVER)"
                 android:textColor="#94a3b8"
                 android:textSize="13sp"
                 android:textStyle="bold"
@@ -82,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:text="ĐỊA CHỈ API (URL)"
                 android:textSize="11sp"
-                android:textColor="#38bdf8"
+                android:textColor="#10b981"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp"/>
 
@@ -105,7 +105,7 @@
                 android:layout_height="wrap_content"
                 android:text="TOKEN BẢO MẬT"
                 android:textSize="11sp"
-                android:textColor="#38bdf8"
+                android:textColor="#10b981"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp"/>
 
