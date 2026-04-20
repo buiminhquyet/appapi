@@ -455,32 +455,34 @@
             localStorage.setItem('last_active', Date.now());
             const savedUser = JSON.parse(localStorage.getItem('qd_user') || '{}');
             const token = savedUser.token || '';
+            const sessionKey = savedUser.session_key || '';
 
             try {
                 const res = await fetch(`https://bachquyet.click/api.php?action=${action}`, {
                     method: body ? 'POST' : 'GET',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-Private-Token': token
+                        'X-Private-Token': token,
+                        'X-Session-Key': sessionKey
                     },
-                    credentials: 'include',
                     body: body ? JSON.stringify({ ...body, deviceId: state.deviceId }) : null
                 });
                 const response = await res.json();
                 if (response.status === 'session_expired') {
                     showModal('Đăng xuất', response.message, '🛡️');
-                    localStorage.removeItem('qd_user'); // Xóa token cũ để không bị lặp lại
+                    localStorage.removeItem('qd_user'); 
                     document.getElementById('app-content').classList.add('hidden');
                     const authOverlay = document.getElementById('auth-overlay');
                     authOverlay.classList.remove('hidden');
                     authOverlay.style.display = 'flex';
                     state.user = null;
+                    if (state.pollingInterval) clearInterval(state.pollingInterval);
                     return response;
                 }
                 if (response.status === 'error' && !silent) showModal('Lỗi', response.message, '❌');
                 return response;
             } catch (e) {
-                if (!silent) showModal('Kết nối', 'Vui lòng kiểm tra CSDL SQL.', '🔴');
+                if (!silent) showModal('Lỗi kết nối', 'Server bảo trì hoặc DNS hosting của bạn đang bị chặn.', '🔴');
                 return null;
             }
         }
@@ -513,23 +515,13 @@
             if (!phone || !password) return showModal('Thiếu thông tin', 'Vui lòng nhập số điện thoại và mật khẩu.', '⚠️');
 
             if (state.authMode === 'register') {
-                // --- ĐĂNG KÝ ---
                 const confirm = document.getElementById('auth-pass-confirm').value;
                 if (password !== confirm) return showModal('Lỗi', 'Mật khẩu xác nhận không khớp!', '❌');
                 if (password.length < 6) return showModal('Lỗi', 'Mật khẩu tối thiểu 6 ký tự!', '⚠️');
                 const res = await api('register', { phone, password });
                 if (res && res.status === 'success') {
                     showModal('Đăng ký thành công!', 'Tài khoản đã được tạo. Đang đăng nhập...', '🎉');
-                    setTimeout(async () => {
-                        modal.classList.remove('active');
-                        const loginRes = await api('login', { phone, password });
-                        if (loginRes && loginRes.status === 'success') {
-                            localStorage.setItem('qd_user', JSON.stringify({ phone, password }));
-                            document.getElementById('auth-overlay').classList.add('hidden');
-                            document.getElementById('app-content').classList.remove('hidden');
-                            fetchProfile();
-                        }
-                    }, 1500);
+                    setTimeout(() => switchAuthMode('login'), 1500);
                 }
             } else {
                 // --- ĐĂNG NHẬP ---
@@ -538,7 +530,8 @@
                     localStorage.setItem('qd_user', JSON.stringify({ 
                         phone: phone, 
                         password: password, 
-                        token: res.user.api_token 
+                        token: res.user.api_token,
+                        session_key: res.user.session_key
                     }));
                     document.getElementById('auth-overlay').classList.add('hidden');
                     document.getElementById('app-content').classList.remove('hidden');
