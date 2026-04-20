@@ -82,7 +82,7 @@ class BankNotificationService : NotificationListenerService() {
             }
         } catch (e: Exception) {}
         
-        val fullReport = "App: $packageName | T: $title | C: $text | S: $subText | B: $bigText | Tick: $tickerText | Dump: $dump".trim()
+        val fullReport = "App: $packageName | Title: $title | Content: $text $subText $bigText $tickerText | Dump: $dump".trim()
         
         // NHẬT KÝ CHI TIẾT
         if (fullReport.isNotEmpty()) {
@@ -90,10 +90,11 @@ class BankNotificationService : NotificationListenerService() {
         }
         
         // KIỂM TRA TỪ KHÓA NẠP TIỀN (Hỗ trợ NAPTIEN, QUYETDEV, QDEV, QD)
-        if (fullReport.contains("NAPTIEN", ignoreCase = true) ||
-            fullReport.contains("QUYETDEV", ignoreCase = true) || 
-            fullReport.contains("QDEV", ignoreCase = true) || 
-            fullReport.contains("QD", ignoreCase = true)) {
+        val lowerReport = fullReport.lowercase()
+        if (lowerReport.contains("naptien") ||
+            lowerReport.contains("quyetdev") || 
+            lowerReport.contains("qdev") || 
+            lowerReport.contains("qd")) {
             
             sendStatusBroadcast("==> KHỚP TỪ KHÓA! Đang gửi đến Server nạp tiền...")
             sendToServer(title, fullReport)
@@ -123,15 +124,24 @@ class BankNotificationService : NotificationListenerService() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                sendStatusBroadcast("Gửi thất bại: ${e.message}")
+                sendStatusBroadcast("Lỗi Kết Nối: ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val code = response.code
-                if (code == 200) {
-                    sendStatusBroadcast("NẠP TIỀN THÀNH CÔNG! ✅")
-                } else {
-                    sendStatusBroadcast("Lỗi Server ($code)")
+                val responseData = response.body?.string() ?: ""
+                try {
+                    // Giả sử server trả về JSON: { "status": "success", "message": "..." }
+                    if (responseData.contains("\"status\":\"success\"")) {
+                        sendStatusBroadcast("THÀNH CÔNG: Đã nạp tiền & Trừ 1 lượt bank ✅")
+                    } else if (responseData.contains("\"status\":\"ignore\"")) {
+                        sendStatusBroadcast("BỎ QUA: Không chứa mã nạp hợp lệ.")
+                    } else if (responseData.contains("Hết lượt bank")) {
+                        sendStatusBroadcast("THẤT BẠI: Bạn đã hết Lượt Bank! ❌")
+                    } else {
+                        sendStatusBroadcast("PHẢN HỒI: $responseData")
+                    }
+                } catch (e: Exception) {
+                    sendStatusBroadcast("Lỗi phản hồi: ${response.code}")
                 }
                 response.close()
             }

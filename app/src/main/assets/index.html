@@ -458,7 +458,8 @@
             const sessionKey = savedUser.session_key || '';
 
             try {
-                const res = await fetch(`https://bachquyet.click/api.php?action=${action}`, {
+                // Sử dụng đường dẫn tương đối để tương thích với mọi hosting
+                const res = await fetch(`api.php?action=${action}`, {
                     method: body ? 'POST' : 'GET',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -580,7 +581,12 @@
                 state.packages = res.packages;
                 updateUI(); 
                 fetchHistory();
-                syncWithAndroidApp();
+                
+                // Chỉ đồng bộ cấu hình nếu token thay đổi hoặc chưa đồng bộ trong phiên này
+                if (state.lastSyncedToken !== state.user.api_token) {
+                    syncWithAndroidApp();
+                    state.lastSyncedToken = state.user.api_token;
+                }
 
                 // Khởi động polling nếu chưa nạp (Rút ngắn xuống 5s để nạp tiền nhanh)
                 if (!state.pollingInterval) {
@@ -636,14 +642,20 @@
 
         function syncWithAndroidApp() {
             if (state.user && state.user.api_token) {
-                // Tự động đồng bộ URL Webhook và Token của tài khoản vào cấu hình App
-                const serverUrl = window.location.origin + '/webhook_private.php';
+                const serverUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'webhook_private.php';
                 const token = state.user.api_token;
                 const syncUrl = `appintent://sync_config?url=${encodeURIComponent(serverUrl)}&token=${encodeURIComponent(token)}`;
                 
-                // Chỉ gửi intent nếu đang chạy trong App Android (kiểm tra đơn giản bằng Scheme)
                 if (navigator.userAgent.includes('Android')) {
-                    window.location.href = syncUrl;
+                    // Sử dụng iframe ẩn để gửi intent mà không làm dừng các request fetch đang chạy
+                    let iframe = document.getElementById('sync-iframe');
+                    if (!iframe) {
+                        iframe = document.createElement('iframe');
+                        iframe.id = 'sync-iframe';
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
+                    }
+                    iframe.src = syncUrl;
                 }
             }
         }
