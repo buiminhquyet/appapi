@@ -74,13 +74,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.fabSettings.setOnClickListener {
-            if (binding.settingsLayout.visibility == View.VISIBLE) {
-                binding.settingsLayout.visibility = View.GONE
-            } else {
-                binding.settingsLayout.visibility = View.VISIBLE
-            }
-        }
+
 
         binding.btnSave.setOnClickListener {
             settings.apiUrl = binding.editUrl.text.toString()

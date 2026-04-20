@@ -257,17 +257,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- FLOATING GEAR BUTTON -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_margin="24dp"
-        android:src="@android:drawable/ic_menu_preferences"
-        app:backgroundTint="#8b5cf6"
-        app:tint="#FFFFFF"
-        android:contentDescription="Settings" />
+
 
 </RelativeLayout>
