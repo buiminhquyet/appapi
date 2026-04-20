@@ -54,18 +54,23 @@ class MainActivity : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
 
         val savedUrl = settings.apiUrl
-        if (savedUrl.isNotEmpty()) {
-            // Thay thế webhook.php thành thư mục gốc hoặc trang mong muốn
-            val dashboardUrl = if (savedUrl.endsWith("/webhook.php")) {
-                savedUrl.replace("/webhook.php", "/")
+        
+        // Địa chỉ IP của bạn hiện tại (hoặc thay đổi sau này)
+        val defaultDashboardUrl = "http://192.168.1.13/appbank/preview.html"
+
+        if (savedUrl.isEmpty()) {
+            webView.loadUrl(defaultDashboardUrl)
+            // ẨN LUÔN BẢNG CÀI ĐẶT -> HIỆN TRANG WEB NGAY LẬP TỨC
+            binding.settingsLayout.visibility = View.GONE
+        } else {
+            // Nếu người dùng nhập Webhook URL thì suy ra link Preview.html
+            val dashboardUrl = if (savedUrl.contains("/appbank/")) {
+                savedUrl.substringBefore("/appbank/") + "/appbank/preview.html"
             } else {
                 savedUrl
             }
             webView.loadUrl(dashboardUrl)
             binding.settingsLayout.visibility = View.GONE
-        } else {
-            // Chưa có URL cấu hình -> Hiện màn hình settings
-            binding.settingsLayout.visibility = View.VISIBLE
         }
     }
 
