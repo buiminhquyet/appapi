@@ -58,6 +58,11 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         checkPermission()
         
+        // Kích hoạt nhận Cookie cho Hosting (Duy trì đăng nhập)
+        val cookieManager = android.webkit.CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        cookieManager.setAcceptThirdPartyCookies(binding.webView, true)
+        
         try {
             registerReceiver(receiver, IntentFilter("com.qdev.pro.LOG_UPDATE"))
         } catch (e: Exception) {}
@@ -76,10 +81,30 @@ class MainActivity : AppCompatActivity() {
         ws.useWideViewPort = true
         ws.builtInZoomControls = false
         ws.displayZoomControls = false
-        ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        ws.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         
-        webView.webViewClient = WebViewClient()
-        webView.webChromeClient = WebChromeClient()
+        webView.webViewClient = object : android.webkit.WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+                
+                if (url.startsWith("appintent://")) {
+                    when {
+                        url.contains("request_notification") -> {
+                            startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                        }
+                        url.contains("request_battery") -> {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                            try { startActivity(intent) } catch (e: Exception) {
+                                startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS))
+                            }
+                        }
+                    }
+                    return true // Ngăn không cho WebView load URL lạ này
+                }
+                return false
+            }
+        }
+        webView.webChromeClient = android.webkit.WebChromeClient()
 
         // Tải giao diện Web đã được nhúng sẵn bên trong APK (Offline, không cần IP)
         webView.loadUrl("file:///android_asset/index.html")

@@ -457,6 +457,7 @@
                 const res = await fetch(`https://bachquyet.click/api.php?action=${action}`, {
                     method: body ? 'POST' : 'GET',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: body ? JSON.stringify({ ...body, deviceId: state.deviceId }) : null
                 });
                 const response = await res.json();
