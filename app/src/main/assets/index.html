@@ -453,10 +453,16 @@
         // silent=true: không hiện modal lỗi (dùng cho auto-login background)
         async function api(action, body = null, silent = false) {
             localStorage.setItem('last_active', Date.now());
+            const savedUser = JSON.parse(localStorage.getItem('qd_user') || '{}');
+            const token = savedUser.token || '';
+
             try {
                 const res = await fetch(`https://bachquyet.click/api.php?action=${action}`, {
                     method: body ? 'POST' : 'GET',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Private-Token': token
+                    },
                     credentials: 'include',
                     body: body ? JSON.stringify({ ...body, deviceId: state.deviceId }) : null
                 });
@@ -527,7 +533,11 @@
                 // --- ĐĂNG NHẬP ---
                 const res = await api('login', { phone, password });
                 if (res && res.status === 'success') {
-                    localStorage.setItem('qd_user', JSON.stringify({ phone, password }));
+                    localStorage.setItem('qd_user', JSON.stringify({ 
+                        phone: phone, 
+                        password: password, 
+                        token: res.user.api_token 
+                    }));
                     document.getElementById('auth-overlay').classList.add('hidden');
                     document.getElementById('app-content').classList.remove('hidden');
                     fetchProfile();
