@@ -571,8 +571,9 @@
 
         async function fetchProfile() {
             const res = await api('get_profile');
-            if (res && res.status === 'success') {
-                const newBalance = parseFloat(res.user.balance);
+            if (!res || res.status !== 'success') return; // Dừng lại nếu lỗi SQL/Server
+
+            const newBalance = parseFloat(res.user.balance);
                 
                 // Nếu đây không phải lần đầu tải trang và balance tăng -> Hiện pháo hoa
                 if (state.lastBalance !== -1 && newBalance > state.lastBalance) {
