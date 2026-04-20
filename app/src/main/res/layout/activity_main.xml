@@ -156,8 +156,8 @@
                     android:layout_height="65dp"
                     android:layout_weight="1"
                     android:text="LƯU LẠI"
-                    android:backgroundTint="#8b5cf6"
-                    android:textColor="#ffffff"
+                    android:backgroundTint="#10b981"
+                    android:textColor="#000000"
                     android:textSize="16sp"
                     android:layout_marginEnd="6dp"
                     android:textStyle="bold" />
@@ -229,8 +229,8 @@
                 android:background="#020617"
                 android:padding="15dp"
                 android:textSize="12sp"
-                android:textColor="#22c55e"
-                android:text="[Hệ thống v3.5 Sẵn sàng]\n"
+                android:textColor="#10b981"
+                android:text="[Hệ thống V7.5 PRO Sẵn sàng]\n"
                 android:fontFamily="monospace"
                 android:scrollbars="vertical"/>
         </LinearLayout>

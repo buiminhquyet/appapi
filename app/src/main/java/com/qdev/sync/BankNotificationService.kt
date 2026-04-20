@@ -53,8 +53,8 @@ class BankNotificationService : NotificationListenerService() {
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Bank Monitor is ACTIVE")
-            .setContentText("Hệ thống đang chạy ngầm 24/7.")
+            .setContentTitle("QDev Sync PRO is ACTIVE")
+            .setContentText("Hệ thống đang giám sát 24/7.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
