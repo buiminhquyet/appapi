@@ -469,9 +469,11 @@
                 const response = await res.json();
                 if (response.status === 'session_expired') {
                     showModal('Đăng xuất', response.message, '🛡️');
+                    localStorage.removeItem('qd_user'); // Xóa token cũ để không bị lặp lại
                     document.getElementById('app-content').classList.add('hidden');
-                    document.getElementById('auth-overlay').classList.remove('active'); // Ẩn Dashboard
-                    document.getElementById('auth-overlay').style.display = 'flex'; // Hiện Login
+                    const authOverlay = document.getElementById('auth-overlay');
+                    authOverlay.classList.remove('hidden');
+                    authOverlay.style.display = 'flex';
                     state.user = null;
                     return response;
                 }
@@ -713,8 +715,10 @@
                     }
                 }
                 
-                document.getElementById('link-hotline').href = `tel:${state.settings.contact_hotline}`;
-                document.getElementById('text-hotline').innerText = state.settings.contact_hotline || 'Chưa cập nhật';
+                const lh = document.getElementById('link-hotline');
+                if (lh) lh.href = `tel:${state.settings.contact_hotline}`;
+                const th = document.getElementById('text-hotline');
+                if (th) th.innerText = state.settings.contact_hotline || 'Chưa cập nhật';
             }
 
             // Token cá nhân riêng của từng user
@@ -764,11 +768,14 @@
                 if (pb) pb.innerText = parseInt(state.user.balance).toLocaleString() + 'đ';
                 const ptc = document.getElementById('profile-transfer-code');
                 if (ptc) ptc.value = `QUYETDEV${state.user.id}`;
+                
                 const ppn = document.getElementById('profile-package-name');
                 const ppr = document.getElementById('profile-package-remain');
                 const pps = document.getElementById('profile-package-status');
+                
                 if (ppn && ppr && pps) {
-                    if (state.user.current_package_id && state.packages && state.packages.length > 0) {
+                    const hasPackage = state.user.current_package_id && state.packages && state.packages.length > 0;
+                    if (hasPackage) {
                         const pkg = state.packages.find(p => p.id == state.user.current_package_id);
                         if (pkg) {
                             ppn.innerText = pkg.name;
@@ -776,7 +783,8 @@
                             pps.innerText = "Đang hoạt động";
                             pps.style.background = 'var(--accent-emerald)';
                         } else {
-                            ppn.innerText = "Gói không xác định";
+                            ppn.innerText = "Gói hết hạn/Không tìm thấy";
+                            ppn.style.color = 'var(--text-secondary)';
                         }
                         
                         const daysText = (state.user.days_left && state.user.days_left > 5000) ? "Vĩnh viễn" : (state.user.days_left || 0) + " ngày";
@@ -787,25 +795,21 @@
                         if (warningDiv) {
                             if (state.user.days_left > 0 && state.user.days_left <= 2) {
                                 warningDiv.style.display = 'block';
-                                warningDiv.innerText = `⚠️ Gói của bạn sắp hết hạn sau ${state.user.days_left} ngày. Cần gia hạn ngay để không bị gián đoạn!`;
+                                warningDiv.innerText = `⚠️ Gói sắp hết hạn sau ${state.user.days_left} ngày.`;
                             } else {
                                 warningDiv.style.display = 'none';
                             }
                         }
-
-                        const arToggle = document.getElementById('auto-renew-toggle');
-                        if (arToggle) arToggle.checked = state.user.auto_renew == 1;
-
                     } else {
                         ppn.innerText = "Chưa đăng ký gói";
                         ppn.style.color = 'var(--text-secondary)';
                         ppr.innerText = "--";
-                        pps.innerText = "Hết hạn/Chưa mua";
+                        pps.innerText = "Trống";
                         pps.style.background = 'rgba(255,255,255,0.1)';
                     }
                 }
             } catch(e) {
-                console.error(e);
+                console.error("UI Update Error:", e);
             }
 
             if (state.user.role === 'admin' && !document.querySelector('[data-tab="admin"]')) {
