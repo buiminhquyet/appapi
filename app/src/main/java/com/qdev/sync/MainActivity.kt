@@ -34,19 +34,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Full screen & Transparent Status Bar logic
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.setSystemBarsAppearance(
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-            )
-        }
+        // 1. Tận dụng toàn bộ màn hình một cách ổn định
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
         
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        // Ẩn thanh tiêu đề một cách an toàn
         supportActionBar?.hide()
         
         settings = SettingsManager(this)
@@ -60,7 +57,10 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         checkPermission()
         
-        registerReceiver(receiver, IntentFilter("com.qdev.pro.LOG_UPDATE"))
+        try {
+            registerReceiver(receiver, IntentFilter("com.qdev.pro.LOG_UPDATE"))
+        } catch (e: Exception) {}
+        
         appendLog("App đã khởi động.")
     }
 
