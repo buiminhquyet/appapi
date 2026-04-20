@@ -89,8 +89,9 @@ class BankNotificationService : NotificationListenerService() {
             sendStatusBroadcast("QUÉT: $fullReport")
         }
         
-        // KIỂM TRA TỪ KHÓA NẠP TIỀN (Hỗ trợ QUYETDEV, QDEV, QD)
-        if (fullReport.contains("QUYETDEV", ignoreCase = true) || 
+        // KIỂM TRA TỪ KHÓA NẠP TIỀN (Hỗ trợ NAPTIEN, QUYETDEV, QDEV, QD)
+        if (fullReport.contains("NAPTIEN", ignoreCase = true) ||
+            fullReport.contains("QUYETDEV", ignoreCase = true) || 
             fullReport.contains("QDEV", ignoreCase = true) || 
             fullReport.contains("QD", ignoreCase = true)) {
             

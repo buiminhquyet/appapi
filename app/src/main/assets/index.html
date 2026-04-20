@@ -735,7 +735,7 @@
 
             // Cập nhật mã chuyển khoản cá nhân của user
             const transferEx = document.getElementById('transfer-code-example');
-            if (transferEx) transferEx.innerText = `QUYETDEV${state.user.id}  (Mã của bạn — bắt buộc ghi vào nội dung CK)`;
+            if (transferEx) transferEx.innerText = `NAPTIEN${state.user.id}  (Mã của bạn — bắt buộc ghi vào nội dung CK)`;
 
             // Render danh sách gói dịch vụ
             const pkgList = document.getElementById('package-list');
@@ -757,7 +757,7 @@
                 }).join('');
             }
 
-            document.getElementById('qr-image').src = `https://img.vietqr.io/image/${state.settings.bank_id}-${state.settings.bank_acc}-compact.jpg?amount=0&addInfo=QUYETDEV${state.user.id}&accountName=${encodeURIComponent(state.settings.bank_name)}`;
+            document.getElementById('qr-image').src = `https://img.vietqr.io/image/${state.settings.bank_id}-${state.settings.bank_acc}-compact.jpg?amount=0&addInfo=NAPTIEN${state.user.id}&accountName=${encodeURIComponent(state.settings.bank_name)}`;
             const dBankName = document.getElementById('disp-bank-name');
             if (dBankName) dBankName.innerText = state.settings.bank_id;
             
@@ -768,14 +768,14 @@
             if (dBankOwner) dBankOwner.innerText = state.settings.bank_name;
             
             const dUserCode = document.getElementById('disp-user-code');
-            if (dUserCode) dUserCode.innerText = `QUYETDEV${state.user.id}`;
+            if (dUserCode) dUserCode.innerText = `NAPTIEN${state.user.id}`;
 
             // Cập nhật tab quản lý tài khoản
             try {
                 const pb = document.getElementById('profile-balance');
                 if (pb) pb.innerText = parseInt(state.user.balance).toLocaleString() + 'đ';
                 const ptc = document.getElementById('profile-transfer-code');
-                if (ptc) ptc.value = `QUYETDEV${state.user.id}`;
+                if (ptc) ptc.value = `NAPTIEN${state.user.id}`;
                 
                 const ppn = document.getElementById('profile-package-name');
                 const ppr = document.getElementById('profile-package-remain');

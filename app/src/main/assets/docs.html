@@ -397,7 +397,7 @@
                                 <td class="param-name">content</td>
                                 <td class="param-type">string</td>
                                 <td class="param-req">Bắt buộc</td>
-                                <td class="param-desc">Nội dung đầy đủ của thông báo. Phải chứa số tiền và mã QD{ID}.<br>VD: <span style="color:var(--emerald);font-family:monospace">MB: +50,000VND ND: QD15 nap tien</span></td>
+                                <td class="param-desc">Nội dung đầy đủ của thông báo. Phải chứa số tiền và mã NAPTIEN{ID}.<br>VD: <span style="color:var(--emerald);font-family:monospace">MB: +50,000VND ND: NAPTIEN15 nap tien</span></td>
                             </tr>
                             <tr>
                                 <td class="param-name">token</td>
@@ -415,8 +415,8 @@
                     <button class="copy-btn" onclick="copyCode(this)">COPY</button>
 <span class="comment"># Gửi bằng cURL</span>
 curl -X POST https://yourdomain.com/appbank/webhook_private.php \
-  -H <span class="str">"X-Private-Token: QD_A3F2B9C1_15"</span> \
-  -d <span class="str">"title=MB Bank&content=MB: +50,000VND tai MB ND: QD15 nap tien"</span>
+  -H <span class="str">"X-Private-Token: NAPTIEN_A3F2B9C1_15"</span> \
+  -d <span class="str">"title=MB Bank&content=MB: +50,000VND tai MB ND: NAPTIEN15 nap tien"</span>
                 </div>
 
                 <h4 style="margin-top: 20px;">Cách hệ thống xử lý nội dung</h4>
@@ -432,7 +432,7 @@ curl -X POST https://yourdomain.com/appbank/webhook_private.php \
                         <div class="flow-num">2</div>
                         <div class="flow-content">
                             <h5>Nhận diện người dùng</h5>
-                            <p>Regex tìm <code style="color:var(--blue)">QD\d+</code> trong nội dung. VD: <code>QD15</code> → User ID = 15.</p>
+                            <p>Regex tìm <code style="color:var(--blue)">NAPTIEN\d+</code> trong nội dung. VD: <code>NAPTIEN15</code> → User ID = 15.</p>
                         </div>
                     </div>
                     <div class="flow-item">
@@ -510,7 +510,7 @@ POST /appbank/webhook.php HTTP/1.1
 
 {
   <span class="key">"amount"</span>: <span class="num">50000</span>,
-  <span class="key">"content"</span>: <span class="str">"QD15 nap tien thang 4"</span>,
+  <span class="key">"content"</span>: <span class="str">"NAPTIEN15 nap tien thang 4"</span>,
   <span class="key">"referenceCode"</span>: <span class="str">"FT24115ABCDE"</span>,
   <span class="key">"gateway"</span>: <span class="str">"MB"</span>,
   <span class="key">"id"</span>: <span class="num">12345</span>
@@ -525,17 +525,17 @@ POST /appbank/webhook.php HTTP/1.1
     <!-- PATTERN -->
     <div class="section" id="pattern">
         <div class="section-title">🔑 Cú pháp nội dung chuyển khoản</div>
-        <div class="section-desc">Để hệ thống tự động nhận diện người dùng, nội dung chuyển khoản phải chứa chuỗi <strong>QUYETDEV</strong> + ID tài khoản.</div>
+        <div class="section-desc">Để hệ thống tự động nhận diện người dùng, nội dung chuyển khoản phải chứa chuỗi <strong>NAPTIEN</strong> + ID tài khoản.</div>
 
         <div class="alert alert-success">
-            ✅ <div>Pattern nhận diện chính xác: <strong>QUYETDEV</strong> + khoảng trắng (tuỳ chọn) + <strong>số ID</strong> của người dùng.<br>
-            Ví dụ: Tài khoản ID = 15 → ghi <code style="color:var(--emerald)">QUYETDEV15</code> hoặc <code style="color:var(--emerald)">QUYETDEV 15</code></div>
+            ✅ <div>Pattern nhận diện chính xác: <strong>NAPTIEN</strong> + khoảng trắng (tuỳ chọn) + <strong>số ID</strong> của người dùng.<br>
+            Ví dụ: Tài khoản ID = 15 → ghi <code style="color:var(--emerald)">NAPTIEN15</code> hoặc <code style="color:var(--emerald)">NAPTIEN 15</code></div>
         </div>
 
         <div class="code-block" style="margin-bottom: 16px;">
             <button class="copy-btn" onclick="copyCode(this)">COPY</button>
 <span class="comment"># Regex được dùng trong cả 2 file PHP</span>
-<span class="kw">preg_match</span>(<span class="str">'/QUYETDEV\s*(\d+)/i'</span>, $content, $matches);
+<span class="kw">preg_match</span>(<span class="str">'/NAPTIEN\s*(\d+)/i'</span>, $content, $matches);
 <span class="comment"># '\s*' = khoảng trắng tuỳ chọn | '/i' = không phân biệt hoa thường</span>
         </div>
 
@@ -544,19 +544,19 @@ POST /appbank/webhook.php HTTP/1.1
             <table>
                 <thead><tr><th>Nội dung chuyển khoản</th><th>Kết quả</th></tr></thead>
                 <tbody>
-                    <tr><td class="param-name">QUYETDEV15 nap tien</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15</td></tr>
-                    <tr><td class="param-name">QUYETDEV 15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (có khoảng trắng)</td></tr>
-                    <tr><td class="param-name">quyetdev15 thanh toan</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (viết thường)</td></tr>
-                    <tr><td class="param-name">THANH TOAN QUYETDEV15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (ở cuối nội dung)</td></tr>
-                    <tr><td class="param-name">nap tien 50k</td><td style="color:var(--rose);">❌ Bỏ qua — Không có chuỗi QUYETDEV</td></tr>
-                    <tr><td class="param-name">QUYET15 nap</td><td style="color:var(--rose);">❌ Bỏ qua — Thiếu chữ "DEV"</td></tr>
+                    <tr><td class="param-name">NAPTIEN15 nap tien</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15</td></tr>
+                    <tr><td class="param-name">NAPTIEN 15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (có khoảng trắng)</td></tr>
+                    <tr><td class="param-name">naptien15 thanh toan</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (viết thường)</td></tr>
+                    <tr><td class="param-name">THANH TOAN NAPTIEN15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (ở cuối nội dung)</td></tr>
+                    <tr><td class="param-name">nap tien 50k</td><td style="color:var(--rose);">❌ Bỏ qua — Không có chuỗi NAPTIEN</td></tr>
+                    <tr><td class="param-name">NAP15 nap</td><td style="color:var(--rose);">❌ Bỏ qua — Thiếu chữ "TIEN"</td></tr>
                 </tbody>
             </table>
         </div>
         </div>
 
         <div class="alert alert-warn" style="margin-top: 16px;">
-            ⚠️ <div>ID người dùng được hiển thị trong Tab <strong>API</strong> của ứng dụng. Ví dụ ID = 15 → nội dung chuyển khoản phải có <code>QUYETDEV15</code>.</div>
+            ⚠️ <div>ID người dùng được hiển thị trong Tab <strong>API</strong> của ứng dụng. Ví dụ ID = 15 → nội dung chuyển khoản phải có <code>NAPTIEN15</code>.</div>
         </div>
     </div>
 
