@@ -1,4 +1,4 @@
-package com.qdev.sync
+package com.qdev.pro
 
 import android.content.Context
 import android.content.SharedPreferences

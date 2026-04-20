@@ -1,11 +1,11 @@
-package com.qdev.sync
+package com.qdev.pro
 
 import android.content.*
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.qdev.sync.databinding.ActivityMainBinding
+import com.qdev.pro.databinding.ActivityMainBinding
 import okhttp3.*
 import java.io.IOException
 import java.util.*
@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.qdev.sync.LOG_UPDATE") {
+            if (intent?.action == "com.qdev.pro.LOG_UPDATE") {
                 val message = intent.getStringExtra("message") ?: ""
                 appendLog(message)
             }
@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         checkPermission()
         
-        registerReceiver(receiver, IntentFilter("com.qdev.sync.LOG_UPDATE"))
+        registerReceiver(receiver, IntentFilter("com.qdev.pro.LOG_UPDATE"))
         appendLog("App đã khởi động.")
     }
 

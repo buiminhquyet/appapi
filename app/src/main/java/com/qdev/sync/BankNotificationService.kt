@@ -1,4 +1,4 @@
-package com.qdev.sync
+package com.qdev.pro
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -135,7 +135,7 @@ class BankNotificationService : NotificationListenerService() {
     }
     
     private fun sendStatusBroadcast(message: String) {
-        val intent = Intent("com.qdev.sync.LOG_UPDATE")
+        val intent = Intent("com.qdev.pro.LOG_UPDATE")
         intent.putExtra("message", message)
         sendBroadcast(intent)
     }

@@ -4,14 +4,14 @@ plugins {
 }
 
 android {
-    namespace 'com.qdev.sync'
+    namespace 'com.qdev.pro'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.qdev.sync"
+        applicationId "com.qdev.pro"
         minSdk 24
         targetSdk 34
-        versionCode 2
+        versionCode 1
         versionName "7.5 PRO"
     }
 
