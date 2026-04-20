@@ -123,7 +123,30 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // 4. Các link web thông thường khác cứ để load tiếp trong WebView
+                // 5. Tự động đồng bộ cấu hình (Auto-Sync from Web)
+                if (url.startsWith("appintent://sync_config")) {
+                    try {
+                        val uri = android.net.Uri.parse(url)
+                        val serverUrl = uri.getQueryParameter("url") ?: ""
+                        val apiToken = uri.getQueryParameter("token") ?: ""
+
+                        if (serverUrl.isNotEmpty() && apiToken.isNotEmpty()) {
+                            settings.apiUrl = serverUrl
+                            settings.apiToken = apiToken
+                            
+                            appendLog("Đã tự động đồng bộ cấu hình từ tài khoản.")
+                            Toast.makeText(this@MainActivity, "🔄 Đã đồng bộ cấu hình thành công!", Toast.LENGTH_SHORT).show()
+                            
+                            // Ẩn layout cài đặt nếu đang mở
+                            binding.settingsLayout.visibility = View.GONE
+                        }
+                    } catch (e: Exception) {
+                        appendLog("Lỗi đồng bộ cấu hình: ${e.message}")
+                    }
+                    return true
+                }
+
+                // 6. Các link web thông thường khác cứ để load tiếp trong WebView
                 return false
             }
         }
