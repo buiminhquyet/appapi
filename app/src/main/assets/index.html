@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QDev Sync — Hệ Thống Đồng Bộ API</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" href="logo.png">
+    <style>
+        /* Professional Notification Style */
+        .topup-notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 380px; background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px); border: 1px solid var(--accent-emerald);
+            border-radius: 20px; padding: 15px 20px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 10000;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .topup-notification.active { top: 20px; }
+        .noti-icon { 
+            width: 45px; height: 45px; background: rgba(16,185,129,0.15); 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--accent-emerald);
+        }
+        .noti-content h4 { font-size: 14px; font-weight: 800; color: var(--accent-emerald); margin: 0; }
+        .noti-content p { font-size: 12px; color: #94a3b8; margin: 2px 0 0; }
+
+        /* Fireworks Effect */
+        .firework {
+            position: fixed; pointer-events: none; width: 6px; height: 6px;
+            border-radius: 50%; z-index: 9999;
+        }
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // --- SECURITY: ANTI-CLONE & DEVTOOLS ---
+        // Chặn chuột phải
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        // Chặn phím tắt (F12, Ctrl+U, Ctrl+Shift+I, etc.)
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        // Check Domain (Bản quyền) - Chỉ chạy trên domain này (placeholder ví dụ)
+        // const ALLOWED_DOMAIN = 'yourdomain.com';
+        // if (window.location.hostname !== ALLOWED_DOMAIN && window.location.hostname !== 'localhost') {
+        //    document.body.innerHTML = '<h1 style="color:white; text-align:center; margin-top:100px;">BẠN KHÔNG CÓ BẢN QUYỀN SỬ DỤNG APP NÀY!</h1>';
+        // }
+    </script>
+
+    <div id="app-simulator">
+        <!-- Auth Overlay -->
+        <div id="auth-overlay">
+            <h1 class="auth-logo-text">QDev Sync</h1>
+            <div class="auth-card">
+                <h2 id="auth-title">ĐĂNG NHẬP</h2>
+                <div class="field-group"><label>SỐ ĐIỆN THOẠI</label><input type="tel" id="auth-phone" placeholder="03xxxxxxxx"></div>
+                <div class="field-group"><label>MẬT KHẨU</label><input type="password" id="auth-pass" placeholder="••••••••"></div>
+                <div class="field-group" id="confirm-pass-group" style="display:none;"><label>XÁC NHẬN MẬT KHẨU</label><input type="password" id="auth-pass-confirm" placeholder="Nhập lại mật khẩu"></div>
+                <button id="btn-auth-main" class="btn-primary">ĐĂNG NHẬP NGAY</button>
+                <div class="auth-toggle-link" id="auth-toggle">Bạn chưa có tài khoản? <b>Đăng ký ngay</b></div>
+            </div>
+        </div>
+
+        <!-- Custom Modal -->
+        <div id="modal-overlay">
+            <div class="modal-content">
+                <div id="modal-icon" style="font-size: 54px; margin-bottom: 20px;">✅</div>
+                <h2 id="modal-title" style="font-size: 22px; font-weight: 800; margin-bottom: 12px; color: white;">Thông báo</h2>
+                <p id="modal-body" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px; font-size: 15px;"></p>
+                <button id="btn-modal-close" class="btn-primary">ĐỒNG Ý</button>
+            </div>
+        </div>
+
+        <!-- Main App Content -->
+        <div id="app-content" class="hidden">
+            <!-- Topup Notification -->
+            <div id="topup-noti" class="topup-notification">
+                <div class="noti-icon">💰</div>
+                <div class="noti-content">
+                    <h4>NẠP TIỀN THÀNH CÔNG</h4>
+                    <p id="topup-noti-msg">Bạn vừa được cộng +0đ vào tài khoản.</p>
+                </div>
+            </div>
+
+            <header style="padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; background: rgba(2, 6, 23, 0.5); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.03);">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 900; letter-spacing: -0.5px; background: linear-gradient(135deg, white, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">QDev Sync</h2>
+                    <p style="font-size: 8px; color: var(--accent-blue); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">Build: Bùi Minh Quyết</p>
+                </div>
+                <div id="btn-logout" style="width: 38px; height: 38px; display: flex; justify-content: center; align-items: center; background: rgba(244, 63, 94, 0.1); color: var(--accent-rose); border-radius: 12px; cursor: pointer; transition: 0.3s; font-size: 18px;">🚪</div>
+            </header>
+
+            <div id="scroll-container" style="padding: 0 25px 120px;">
+                <!-- TAB 1: TRANG CHỦ -->
+                <section id="tab-dashboard" class="tab-content">
+                    <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 32px; padding: 30px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden;">
+                        <p style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">Số dư khả dụng</p>
+                        <h1 id="top-balance" style="font-size: 40px; font-weight: 900; color: var(--accent-emerald); margin-top: 5px;">0đ</h1>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">🛒 GÓI DỊCH VỤ</h3>
+                    <div id="package-list" class="pricing-grid"></div>
+                </section>
+
+                <!-- TAB 2: NẠP TIỀN -->
+                <section id="tab-topup" class="tab-content hidden">
+                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">NẠP TIỀN</h3>
+                    <div class="qr-master-card"><div class="qr-box"><img id="qr-image" src="" alt="Vui lòng chờ..."></div><div class="bank-row"><span class="bank-label">Ngân hàng</span><span class="bank-value" id="disp-bank-name">--</span></div><div class="bank-row"><span class="bank-label">Số tài khoản</span><span class="bank-value"><span id="disp-bank-acc">--</span> <button class="btn-copy" onclick="copyText(document.getElementById('disp-bank-acc').innerText)">COPY</button></span></div><div class="bank-row"><span class="bank-label">Chủ tài khoản</span><span class="bank-value" id="disp-bank-owner">--</span></div><div class="bank-row" style="border: none;"><span class="bank-label">Nội dung</span><span class="bank-value" style="color: var(--accent-amber);"><span id="disp-user-code">--</span> <button class="btn-copy" onclick="copyText(document.getElementById('disp-user-code').innerText)">COPY</button></span></div></div>
+                    
+                    <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 12px 15px; margin-bottom: 20px;">
+                        <h4 style="font-size: 13px; color: var(--accent-amber); font-weight: 800; margin-bottom: 5px;">⚠️ LƯU Ý QUAN TRỌNG</h4>
+                        <p style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+                            - Số tiền nạp tối thiểu (Min nạp): <b style="color: white;">10,000đ</b>.<br>
+                            - Giao dịch <b style="color: var(--accent-rose);">dưới 10k sẽ không được cộng tiền</b> tự động.<br>
+                            - Sai nội dung nạp sẽ bị cộng chậm hoặc mất tiền.
+                        </p>
+                    </div>
+
+                    <button class="btn-primary" onclick="fetchProfile()">CẬP NHẬT SỐ DƯ</button>
+                    
+                    <div style="margin-top: 25px;">
+                        <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <span>🕒 LỊCH SỬ NẠP GẦN ĐÂY</span>
+                        </h3>
+                        <div id="topup-history-container" style="display: flex; flex-direction: column; gap: 10px;">
+                            <p style="text-align: center; font-size: 11px; color: var(--text-secondary); padding: 20px;">Đang tải lịch sử...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: API & CONFIG -->
+                <section id="tab-config" class="tab-content hidden">
+
+                    <!-- Bảng tài liệu API nhỏ gọn -->
+                    <a href="docs.html" target="_blank" style="text-decoration: none; display: block; margin-bottom: 12px;">
+                        <h3 style="font-size: 15px; font-weight: 800; color: var(--accent-blue); display: flex; align-items: center; justify-content: space-between; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.12); padding: 12px 16px; border-radius: 12px; transition: 0.2s; cursor: pointer;">
+                            <span>📋 TÀI LIỆU API</span>
+                            <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Xem chi tiết →</span>
+                        </h3>
+                    </a>
+                    <div style="background: var(--bg-card); border-radius: 16px; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.07);">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                            <thead>
+                                <tr style="background: rgba(56,189,248,0.08); border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <th style="padding: 10px 12px; text-align: left; color: var(--text-secondary); font-weight: 700;">LOẠI</th>
+                                    <th style="padding: 10px 12px; text-align: left; color: var(--text-secondary); font-weight: 700;">ENDPOINT</th>
+                                    <th style="padding: 10px 12px; text-align: left; color: var(--text-secondary); font-weight: 700;">KIỂU</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                    <td style="padding: 10px 12px; color: var(--accent-amber); font-weight: 700;">Android</td>
+                                    <td style="padding: 10px 12px; color: var(--text-secondary); font-family: 'JetBrains Mono'; word-break: break-all;">webhook_private.php</td>
+                                    <td style="padding: 10px 12px;"><span style="background: rgba(16,185,129,0.15); color: var(--accent-emerald); padding: 2px 8px; border-radius: 6px; font-weight: 700;">POST</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 12px; color: var(--accent-blue); font-weight: 700;">SePay</td>
+                                    <td style="padding: 10px 12px; color: var(--text-secondary); font-family: 'JetBrains Mono'; word-break: break-all;">webhook.php</td>
+                                    <td style="padding: 10px 12px;"><span style="background: rgba(56,189,248,0.15); color: var(--accent-blue); padding: 2px 8px; border-radius: 6px; font-weight: 700;">POST</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ô điền cấu hình Android App -->
+                    <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; color: var(--accent-amber);">📱 ĐIỀN VÀO ANDROID APP</h3>
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="field-group">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>📍 URL WEBHOOK (Các endpoint nhận data)</span>
+                                <span style="background: rgba(16,185,129,0.15); color: var(--accent-emerald); padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: 800;" onclick="addWebhookUrlField()">➕ THÊM Ô</span>
+                            </label>
+                            <div id="webhook-url-container" style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" class="private-api-url" placeholder="https://yourdomain.com/appbank/webhook_private.php" style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-emerald);">
+                                    <button class="btn-copy" onclick="saveWebhookUrl()" style="background: var(--accent-emerald); color: white;">LƯU CHUNG</button>
+                                </div>
+                            </div>
+                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 6px;">✏️ Nhập nhiều URL bằng cách bấm Thêm ô. Hệ thống (App) sẽ gọi toàn bộ khi có GD mới.</p>
+                        </div>
+                        <div class="field-group" style="margin-bottom: 0;">
+                            <label>🔑 TOKEN CÁ NHÂN (Ô thứ hai — Tự động tạo riêng cho tài khoản)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="user-api-token" readonly style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-amber);">
+                                <button class="btn-copy" onclick="copyText(document.getElementById('user-api-token').value)">COPY</button>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <button class="btn-copy" style="flex: 1; background: rgba(244,63,94,0.15); color: var(--accent-rose); border: 1px solid var(--accent-rose);" onclick="regenToken()">🔄 TẠO TOKEN MỚI</button>
+                            </div>
+                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 6px;">🛡️ Token này là mã bí mật riêng của tài khoản bạn. Không chia sẻ với người khác.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ô điền cấu hình SePay/Casso -->
+                    <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; color: var(--accent-blue);">🏦 ĐIỀN VÀO SEPAY / CASSO</h3>
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="field-group">
+                            <label>📍 WEBHOOK URL</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="webhook-url-disp" readonly style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-emerald);">
+                                <button class="btn-copy" onclick="copyText(document.getElementById('webhook-url-disp').value)">COPY</button>
+                            </div>
+                        </div>
+                        <div class="field-group" style="margin-bottom: 0;">
+                            <label>🔑 SECRET TOKEN (Authorization)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="api-token" readonly style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-amber);">
+                                <button class="btn-copy" onclick="copyText(document.getElementById('api-token').value)">COPY</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nội dung chuyển khoản -->
+                    <div style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 16px; padding: 15px;">
+                        <p style="font-size: 12px; font-weight: 800; color: var(--accent-emerald); margin-bottom: 8px;">✅ CÚ PHÁP CHUYỂN KHOẢN</p>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">Nội dung CK phải chứa mã định danh của bạn:</p>
+                        <div style="background: #000; padding: 10px 14px; border-radius: 10px; font-family: 'JetBrains Mono'; font-size: 12px; color: var(--accent-emerald);" id="transfer-code-example">QD[ID_CUA_BAN] (VD: QD15)</div>
+                    </div>
+
+                    <button class="btn-primary" style="background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); margin-top: 15px;" onclick="window.location.href='docs.html'">📘 XEM HƯỚNG DẪN CHI TIẾT</button>
+                </section>
+
+                <!-- TAB 4: QUẢN LÝ TÀI KHOẢN -->
+                <section id="tab-account" class="tab-content hidden">
+                    <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">QUẢN LÝ TÀI KHOẢN</h2>
+                    
+                    <div class="card" style="margin-bottom: 15px; text-align: center;">
+                        <h3 style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Số Dư Khả Dụng</h3>
+                        <div style="font-size: 32px; font-weight: 900; color: var(--accent-emerald);" id="profile-balance">0đ</div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 15px; background: linear-gradient(135deg, rgba(56,189,248,0.05), rgba(129,140,248,0.05)); border: 1px solid rgba(56,189,248,0.15);">
+                        <h3 style="font-size: 14px; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>📦 GÓI ĐANG DÙNG</span>
+                            <span id="profile-package-status" style="font-size: 10px; background: var(--accent-blue); color: white; padding: 3px 8px; border-radius: 20px; font-weight: 700;">Đang hoạt động</span>
+                        </h3>
+                        <div id="expire-warning" style="display:none; margin-bottom: 12px; padding:10px 12px; background:rgba(244,63,94,0.15); border:1px dashed var(--accent-rose); border-radius:8px; color:var(--accent-rose); font-size:12px; font-weight:700;">⚠️ Gói của bạn sắp hết hạn sau 2 ngày nữa. Cần gia hạn ngay để không bị gián đoạn!</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: var(--text-secondary);">Tên gói:</span>
+                            <strong style="font-size: 13px; color: var(--text-main);" id="profile-package-name">Đang tải...</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 12px; color: var(--text-secondary);">Còn lại:</span>
+                            <strong style="font-size: 13px; color: var(--accent-amber);" id="profile-package-remain">--</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
+                            <span style="font-size: 12px; color: var(--text-secondary);">Tự động gia hạn (trừ tiền)</span>
+                            <div style="display:flex; align-items:center;">
+                                <input type="checkbox" id="auto-renew-toggle" onchange="toggleAutoRenew(this)" style="width: 16px; height: 16px; accent-color: var(--accent-emerald); cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="card" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">⚙️ QUYỀN TRUY CẬP APP</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="btn-copy" onclick="requestAppPermission('notification')" style="background: rgba(16,185,129,0.1); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.2); width: 100%; padding: 12px 15px; font-size: 13px; font-weight: 700; justify-content: space-between; display: flex;">
+                                <span>🔔 Cấp Quyền Thông Báo</span>
+                                <span>Tiến hành ➔</span>
+                            </button>
+                            <button class="btn-copy" onclick="requestAppPermission('background')" style="background: rgba(245,158,11,0.1); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.2); width: 100%; padding: 12px 15px; font-size: 13px; font-weight: 700; justify-content: space-between; display: flex;">
+                                <span>🔋 Bật Chạy Ngầm (Giữ App)</span>
+                                <span>Thiết lập ➔</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 25px;">
+                        <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px;">🔒 ĐỔI MẬT KHẨU</h3>
+                        <div class="field-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" id="profile-new-pass" placeholder="Nhập ít nhất 6 ký tự">
+                        </div>
+                        <button class="btn-primary" onclick="changePassword()" style="width: 100%; padding: 12px; border-radius: 12px;">Cập Nhật Mật Khẩu</button>
+                    </div>
+
+                    <!-- SUPPORT SECTION -->
+                    <div class="card" style="margin-bottom: 25px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5)); border: 1px solid rgba(255,255,255,0.05);">
+                        <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--accent-blue);">📞 HỖ TRỢ KHÁCH HÀNG</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <a id="link-fb" href="#" target="_blank" style="text-decoration: none; background: #1877F2; color: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 700;">
+                                <span>🔵</span> Facebook
+                            </a>
+                            <a id="link-zalo" href="#" target="_blank" style="text-decoration: none; background: #0068FF; color: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 700;">
+                                <span>🟢</span> Zalo
+                            </a>
+                        </div>
+                        <a id="link-hotline" href="tel:0" style="text-decoration: none; background: rgba(255,255,255,0.05); color: white; padding: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; font-weight: 800; border: 1px solid rgba(255,255,255,0.1);">
+                            <span>📞 HOTLINE:</span> <span id="text-hotline">099.999.9999</span>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- TAB 5: ADMIN -->
+                <section id="tab-admin" class="tab-content hidden">
+                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">CẤU HÌNH HỆ THỐNG</h3>
+                    <div class="card">
+                        <div class="field-group"><label>🆔 MÃ NGÂN HÀNG (VD: MB, VCB)</label><input type="text" id="set-bank-id" class="config-highlight" placeholder="VIB, MB, VCB..."></div>
+                        <div class="field-group"><label>💳 SỐ TÀI KHOẢN NHẬN TIỀN</label><input type="text" id="set-bank-acc" class="config-highlight" placeholder="Nhập số tài khoản của bạn"></div>
+                        <div class="field-group"><label>👤 TÊN CHỦ TÀI KHOẢN</label><input type="text" id="set-bank-name" class="config-highlight" placeholder="Tên không dấu (VD: TRAN VAN A)"></div>
+                        <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;"></div>
+                        <div class="field-group"><label>🔵 LINK FACEBOOK ADMIN</label><input type="text" id="set-contact-fb" class="config-highlight" placeholder="https://facebook.com/username"></div>
+                        <div class="field-group"><label>🟢 LINK ZALO / SĐT ZALO</label><input type="text" id="set-contact-zalo" class="config-highlight" placeholder="032xxxxxxx hoặc link zalo"></div>
+                        <div class="field-group"><label>📞 SỐ ĐIỆN THOẠI HOTLINE</label><input type="text" id="set-contact-hotline" class="config-highlight" placeholder="032xxxxxxx"></div>
+                        <button class="btn-primary" id="btn-save-admin">LƯU THAY ĐỔI CẤU HÌNH</button>
+                    </div>
+                    <div style="margin-top: 25px;">
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">📊 THỐNG KÊ</h3>
+                        <div class="stats-container">
+                            <div class="stats-card revenue"><span class="label">Doanh thu</span><span class="value" id="stat-revenue">0đ</span></div>
+                            <div class="stats-card orders"><span class="label">Đơn hàng</span><span class="value" id="stat-orders">0</span></div>
+                            <div class="stats-card"><span class="label">Thành viên</span><span class="value" id="stat-users">0</span></div>
+                            <div class="stats-card"><span class="label">Lượt dùng</span><span class="value" id="stat-credits">0</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 25px;">
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">📦 CẤU HÌNH GIÁ GÓI</h3>
+                        <div id="admin-packages-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+                        <button class="btn-primary" style="margin-top:15px; width:100%; background:linear-gradient(135deg, var(--accent-emerald), #059669);" onclick="saveAdminPackages()">LƯU GIÁ GÓI</button>
+                    </div>
+                </section>
+
+                <!-- TAB 6: DOCUMENTATION -->
+                <section id="tab-docs" class="tab-content hidden">
+                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 5px;">📘 TÀI LIỆU KẾT NỐI</h3>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 20px;">Hướng dẫn tích hợp chuyển khoản tự động cho hệ thống của bạn.</p>
+                    <div class="docs-container">
+
+                        <!-- Phương thức 1 -->
+                        <div class="docs-step">
+                            <h4>📱 PHƯƠNG THỨC 1: Android Forwarder App</h4>
+                            <p>App điện thoại hiện đang sử dụng, đọc thông báo SMS/Push từ App ngân hàng và gửi về server.</p>
+                            <p><b style="color:var(--accent-blue)">Bước 1:</b> Mở App QUYETDEV Bank Forwarder trên điện thoại.</p>
+                            <p><b style="color:var(--accent-blue)">Bước 2:</b> Dán URL này vào ô <b>"Cấu hình API Webhook"</b> đầu tiên:</p>
+                            <div class="code-box" onclick="copyText(this.innerText)" id="docs-private-url">https://yourdomain.com/appbank/webhook_private.php</div>
+                            <p style="margin-top:10px;"><b style="color:var(--accent-blue)">Bước 3:</b> Dán Token này vào ô thứ 2:</p>
+                            <div class="code-box" onclick="copyText(this.innerText)">QUYET_PRIVATE_API_SECURE_7788</div>
+                            <p style="margin-top:10px; color: var(--accent-emerald);"><b>✅ Cú pháp chuyển khoản:</b> Nội dung CK phải chứa <b>QUYETDEV{ID của bạn}</b> hoặc <b>QUYETDEV {ID của bạn}</b> để hệ thống nhận diện.</p>
+                            <div class="code-box">VD nội dung: QUYETDEV15 nap tien</div>
+                        </div>
+
+                        <!-- Phương thức 2 -->
+                        <div class="docs-step">
+                            <h4>🏦 PHƯƠNG THỨC 2: SePay / Casso Webhook</h4>
+                            <p>Kết nối dịch vụ đọc sao kê tự động. Phù hợp với MB Bank, VCB, Techcombank...</p>
+                            <p><b style="color:var(--accent-blue)">Bước 1:</b> Đăng ký tài khoản tại <b>SePay.vn</b> hoặc <b>Casso.vn</b>.</p>
+                            <p><b style="color:var(--accent-blue)">Bước 2:</b> Trong phần Webhook, dán URL này:</p>
+                            <div class="code-box" onclick="copyText(this.innerText)" id="docs-webhook-url">https://yourdomain.com/appbank/webhook.php</div>
+                            <p style="margin-top:10px;"><b style="color:var(--accent-blue)">Bước 3:</b> Trong phần <b>"Mã bảo mật" / "Signature Key"</b>, dán Token từ Tab API.</p>
+                            <p style="margin-top:10px;"><b style="color:var(--accent-blue)">Bước 4:</b> Định dạng nội dung nhận diện:</p>
+                            <div class="code-box">VD nội dung CK: QUYETDEV15 nap tien</div>
+                        </div>
+
+                        <!-- Lưu ý -->
+                        <div class="docs-step" style="border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05);">
+                            <h4 style="color: var(--accent-amber);">⚠️ LƯU Ý QUAN TRỌNG</h4>
+                            <p>• Mỗi người dùng có <b>1 mã ID riêng</b> — Xem ở phần Hồ sơ (Tab Profile).</p>
+                            <p>• Nội dung chuyển khoản <b>PHẢI CHỨA</b> chuỗi "QUYETDEV" + ID. Thiếu sẽ không nạp được.</p>
+                            <p>• Chỉ 1 trong 2 phương thức hoạt động cùng lúc là đủ. Không cần dùng cả 2.</p>
+                        </div>
+
+                        <button class="btn-primary" onclick="switchTabById('config')">⚙️ QUAY LẠI CÀI ĐẶT</button>
+                    </div>
+                </section>
+
+                <!-- FOOTER -->
+                <footer style="margin: 20px 0 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                    <p style="font-size: 12px; font-weight: 800; color: var(--text-main); margin-bottom: 5px;">Copyright © 2026 QUYETDEV</p>
+                    <p style="font-size: 10px; color: var(--text-secondary); margin-bottom: 15px;">Phiên bản: V7.5 Pro (Bùi Minh Quyết Build)</p>
+                    <div style="display: flex; justify-content: center; gap: 15px;">
+                        <span style="font-size: 10px; color: var(--accent-blue); cursor: pointer; text-decoration: underline;" onclick="showModal('Chính sách bảo mật', 'Chúng tôi cam kết bảo mật tuyệt đối dữ liệu người dùng. Mọi thông báo SMS được xử lý tại thiết bị của bạn và chỉ gửi các mã nạp hợp lệ về server để cộng tiền. Chúng tôi không thu thập thông tin cá nhân ngoài số điện thoại đăng ký.', '🛡️')">Chính sách bảo mật</span>
+                        <span style="font-size: 10px; color: var(--accent-blue); cursor: pointer; text-decoration: underline;" onclick="showModal('Điều khoản dịch vụ', 'Bằng việc sử dụng app, bạn đồng ý không sử dụng dịch vụ cho mục đích vi phạm pháp luật. Chúng tôi có quyền khóa tài khoản nếu phát hiện hành vi gian lận hoặc tấn công hệ thống.', '⚖️')">Điều khoản dịch vụ</span>
+                    </div>
+                </footer>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav" id="main-nav">
+                <div class="nav-item active" data-tab="dashboard"><span class="nav-icon">🏘️</span>Home</div>
+                <div class="nav-item" data-tab="topup"><span class="nav-icon">🏦</span>Nạp</div>
+                <div class="nav-item" data-tab="config"><span class="nav-icon">⚙️</span>API</div>
+                <div class="nav-item" data-tab="account"><span class="nav-icon">👤</span>Profile</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = { user: null, settings: null, packages: [], deviceId: "", authMode: 'login' };
+        const SESSION_TIMEOUT = 30 * 60 * 1000;
+
+        function generateFingerprint() {
+            const data = [navigator.userAgent, screen.width + "x" + screen.height, new Date().getTimezoneOffset(), navigator.language].join('|');
+            return btoa(data).substring(0, 32);
+        }
+        state.deviceId = generateFingerprint();
+
+        const modal = document.getElementById('modal-overlay');
+        function showModal(title, body, icon = '✅') { 
+            document.getElementById('modal-icon').innerText = icon;
+            document.getElementById('modal-title').innerText = title; 
+            document.getElementById('modal-body').innerText = body; 
+            document.getElementById('btn-modal-close').innerText = 'ĐỒNG Ý';
+            document.getElementById('btn-modal-close').onclick = () => modal.classList.remove('active');
+            
+            // Xóa nút phụ nếu có
+            const extraBtn = document.getElementById('btn-modal-action');
+            if (extraBtn) extraBtn.remove();
+            
+            modal.classList.add('active'); 
+        }
+
+        // Custom confirm thay cho trình duyệt mặc định
+        function showConfirm(title, body, confirmText, onConfirmCallback) {
+            document.getElementById('modal-icon').innerText = '❓';
+            document.getElementById('modal-title').innerText = title; 
+            document.getElementById('modal-body').innerText = body; 
+            
+            const btnClose = document.getElementById('btn-modal-close');
+            btnClose.innerText = 'HỦY QUẢN LÝ';
+            btnClose.onclick = () => modal.classList.remove('active');
+            
+            // Xóa nút phụ cũ nếu có
+            let actionBtn = document.getElementById('btn-modal-action');
+            if (actionBtn) actionBtn.remove();
+            
+            actionBtn = document.createElement('button');
+            actionBtn.id = 'btn-modal-action';
+            actionBtn.className = 'btn-primary';
+            actionBtn.style.marginTop = '10px';
+            actionBtn.style.background = 'var(--accent-rose)';
+            actionBtn.innerText = confirmText;
+            actionBtn.onclick = () => {
+                modal.classList.remove('active');
+                onConfirmCallback();
+            };
+            
+            document.querySelector('.modal-content').appendChild(actionBtn);
+            modal.classList.add('active'); 
+        }
+
+        // silent=true: không hiện modal lỗi (dùng cho auto-login background)
+        async function api(action, body = null, silent = false) {
+            localStorage.setItem('last_active', Date.now());
+            try {
+                const res = await fetch(`api.php?action=${action}`, {
+                    method: body ? 'POST' : 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body ? JSON.stringify({ ...body, deviceId: state.deviceId }) : null
+                });
+                const response = await res.json();
+                if (response.status === 'session_expired') {
+                    showModal('Đăng xuất', response.message, '🛡️');
+                    document.getElementById('app-content').classList.add('hidden');
+                    document.getElementById('auth-overlay').classList.remove('active'); // Ẩn Dashboard
+                    document.getElementById('auth-overlay').style.display = 'flex'; // Hiện Login
+                    state.user = null;
+                    return response;
+                }
+                if (response.status === 'error' && !silent) showModal('Lỗi', response.message, '❌');
+                return response;
+            } catch (e) {
+                if (!silent) showModal('Kết nối', 'Vui lòng kiểm tra CSDL SQL.', '🔴');
+                return null;
+            }
+        }
+
+        function switchAuthMode(mode) {
+            state.authMode = mode;
+            const t = document.getElementById('auth-title');
+            const m = document.getElementById('btn-auth-main');
+            const l = document.getElementById('auth-toggle');
+            const confirmGroup = document.getElementById('confirm-pass-group');
+            if (mode === 'login') {
+                t.innerText = "ĐĂNG NHẬP";
+                m.innerText = "ĐĂNG NHẬP NGAY";
+                m.style.background = '';
+                l.innerHTML = "Bạn chưa có tài khoản? <b>Đăng ký ngay</b>";
+                confirmGroup.style.display = 'none';
+            } else {
+                t.innerText = "TẠO TÀI KHOẢN";
+                m.innerText = "ĐĂNG KÝ TÀI KHOẢN";
+                m.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                l.innerHTML = "Đã có tài khoản? <b>Đăng nhập ngay</b>";
+                confirmGroup.style.display = '';
+            }
+        }
+        document.getElementById('auth-toggle').onclick = () => switchAuthMode(state.authMode === 'login' ? 'register' : 'login');
+
+        document.getElementById('btn-auth-main').onclick = async () => {
+            const phone = document.getElementById('auth-phone').value.trim();
+            const password = document.getElementById('auth-pass').value;
+            if (!phone || !password) return showModal('Thiếu thông tin', 'Vui lòng nhập số điện thoại và mật khẩu.', '⚠️');
+
+            if (state.authMode === 'register') {
+                // --- ĐĂNG KÝ ---
+                const confirm = document.getElementById('auth-pass-confirm').value;
+                if (password !== confirm) return showModal('Lỗi', 'Mật khẩu xác nhận không khớp!', '❌');
+                if (password.length < 6) return showModal('Lỗi', 'Mật khẩu tối thiểu 6 ký tự!', '⚠️');
+                const res = await api('register', { phone, password });
+                if (res && res.status === 'success') {
+                    showModal('Đăng ký thành công!', 'Tài khoản đã được tạo. Đang đăng nhập...', '🎉');
+                    setTimeout(async () => {
+                        modal.classList.remove('active');
+                        const loginRes = await api('login', { phone, password });
+                        if (loginRes && loginRes.status === 'success') {
+                            localStorage.setItem('qd_user', JSON.stringify({ phone, password }));
+                            document.getElementById('auth-overlay').classList.add('hidden');
+                            document.getElementById('app-content').classList.remove('hidden');
+                            fetchProfile();
+                        }
+                    }, 1500);
+                }
+            } else {
+                // --- ĐĂNG NHẬP ---
+                const res = await api('login', { phone, password });
+                if (res && res.status === 'success') {
+                    localStorage.setItem('qd_user', JSON.stringify({ phone, password }));
+                    document.getElementById('auth-overlay').classList.add('hidden');
+                    document.getElementById('app-content').classList.remove('hidden');
+                    fetchProfile();
+                }
+            }
+        };
+
+        async function checkSession() {
+            const saved = localStorage.getItem('qd_user');
+            const lastActive = localStorage.getItem('last_active');
+            if (!saved || !lastActive) return;
+            if (Date.now() - parseInt(lastActive) >= SESSION_TIMEOUT) {
+                localStorage.removeItem('qd_user'); // Hết phiên → xóa
+                return;
+            }
+            const u = JSON.parse(saved);
+            // Dùng silent=true để không hiện modal nếu session đã hết hạn
+            const res = await api('login', { phone: u.phone, password: u.password }, true);
+            if (res && res.status === 'success') {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                fetchProfile();
+            } else {
+                // Credentials cũ không hợp lệ nữa → xóa để không lặp lại
+                localStorage.removeItem('qd_user');
+            }
+        }
+        window.onload = checkSession;
+
+        async function fetchProfile() {
+            const res = await api('get_profile');
+            if (res && res.status === 'success') {
+                const newBalance = parseFloat(res.user.balance);
+                
+                // Nếu đây không phải lần đầu tải trang và balance tăng -> Hiện pháo hoa
+                if (state.lastBalance !== -1 && newBalance > state.lastBalance) {
+                    showTopupNotification(newBalance - state.lastBalance);
+                    showFireworks();
+                }
+                
+                state.lastBalance = newBalance;
+                state.user = res.user; 
+                state.settings = res.settings; 
+                state.packages = res.packages;
+                updateUI(); 
+                fetchHistory();
+
+                // Khởi động polling nếu chưa nạp (Rút ngắn xuống 5s để nạp tiền nhanh)
+                if (!state.pollingInterval) {
+                    state.pollingInterval = setInterval(fetchProfile, 5000); 
+                }
+            }
+        }
+
+        async function fetchHistory() {
+            const res = await api('get_history');
+            if (res && res.status === 'success') {
+                const container = document.getElementById('history-container');
+                if (container) {
+                    container.innerHTML = res.history.map(h => `<div class="history-item ${h.type}"><div class="history-info"><h5>${h.type === 'deposit' ? 'Nạp tiền' : 'Gói cước'}</h5><p>${new Date(h.created_at).toLocaleString()}</p></div><div class="history-amount ${h.type === 'deposit' ? 'plus' : 'minus'}">${parseInt(h.amount).toLocaleString()}đ</div></div>`).join('') || '<p style="text-align:center;font-size:11px;">Chưa có giao dịch.</p>';
+                }
+
+                const topupContainer = document.getElementById('topup-history-container');
+                if (topupContainer) {
+                    const deposits = res.history.filter(h => h.type === 'deposit');
+                    topupContainer.innerHTML = deposits.map(h => `
+                        <div class="card" style="padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(16,185,129,0.15);">
+                            <div>
+                                <div style="font-size: 12px; font-weight: 800; color: var(--accent-emerald);">+${parseInt(h.amount).toLocaleString()}đ</div>
+                                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">${new Date(h.created_at).toLocaleString()}</div>
+                            </div>
+                            <div style="font-size: 9px; background: rgba(16,185,129,0.1); color: var(--accent-emerald); padding: 2px 8px; border-radius: 100px; font-weight: 700;">THÀNH CÔNG</div>
+                        </div>
+                    `).join('') || '<p style="text-align:center;font-size:11px;">Chưa có lịch sử nạp.</p>';
+                }
+            }
+        }
+
+        async function fetchAdminStats() {
+            const res = await api('get_admin_stats');
+            if (res && res.status === 'success') {
+                document.getElementById('stat-revenue').innerText = parseInt(res.stats.revenue).toLocaleString() + 'đ';
+                document.getElementById('stat-orders').innerText = res.stats.orders;
+                document.getElementById('stat-users').innerText = res.stats.users;
+                document.getElementById('stat-credits').innerText = res.stats.credits;
+            }
+            const pkgsDiv = document.getElementById('admin-packages-list');
+            if (pkgsDiv && state.packages) {
+                pkgsDiv.innerHTML = state.packages.map(p => `
+                    <div class="card" style="padding:15px; margin-bottom:0px; border-color:rgba(16,185,129,0.2);">
+                        <div style="font-size:13px; font-weight:800; color:var(--accent-emerald);">${p.name}</div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                            <label style="font-size:12px; font-weight:600; width:50px; color:var(--text-secondary);">Giá (đ):</label>
+                            <input type="number" class="admin-pkg-price" data-id="${p.id}" value="${parseFloat(p.price)}" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 12px; color:white; font-family:'JetBrains Mono'; font-size:14px; font-weight:700;">
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function saveAdminPackages() {
+            const inputs = document.querySelectorAll('.admin-pkg-price');
+            const data = Array.from(inputs).map(inp => ({
+                id: inp.getAttribute('data-id'),
+                price: inp.value
+            }));
+            const res = await api('admin_save_packages', { packages: data });
+            if (res && res.status === 'success') {
+                showModal('Thành công', 'Đã lưu cấu trúc giá gói thành công!', '🎉');
+                fetchProfile();
+            }
+        }
+
+        function updateUI() {
+            if (!state.user) return;
+
+            // --- SECURITY: MOBILE ONLY CHECK (Optional but recommended) ---
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (!isMobile && window.location.hostname !== 'localhost') {
+                // Bạn có thể mở comment bên dưới nếu muốn khóa hoàn toàn trên PC
+                // document.body.innerHTML = '<div style="background:#0f172a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px; font-family:sans-serif;"><div><h1 style="font-size:50px;">🚫</h1><h2>ỨNG DỤNG CHỈ HỖ TRỢ TRÊN MOBILE</h2><p>Vui lòng sử dụng điện thoại để truy cập hệ thống.</p></div></div>';
+                // return;
+            }
+
+            document.getElementById('top-balance').innerText = parseInt(state.user.balance).toLocaleString() + 'đ';
+            const pf = document.getElementById('prof-phone');
+            if (pf) pf.innerText = state.user.phone;
+            const apiTk = document.getElementById('api-token');
+            if (apiTk) apiTk.value = state.user.api_token || '';
+
+            // Sử dụng placeholder để người dùng biết là cần thay đổi domain
+            const webhookUrl = 'https://ten-mien-cua-ban.com/webhook.php';
+
+            // Điền vào tất cả các ô Tab API
+            const whContainer = document.getElementById('webhook-url-container');
+            if (whContainer && state.user.webhook_url) {
+                const urls = state.user.webhook_url.split(',');
+                whContainer.innerHTML = urls.map((u, idx) => `
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="private-api-url" value="${u}" style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-emerald);">
+                        ${idx === 0 ? `<button class="btn-copy" onclick="saveWebhookUrl()" style="background: var(--accent-emerald); color: white;">LƯU CHUNG</button>` : `<button class="btn-copy" onclick="this.parentElement.remove()" style="background: rgba(244,63,94,0.15); color: var(--accent-rose);">❌</button>`}
+                    </div>
+                `).join('');
+            }
+            const whEl = document.getElementById('webhook-url-disp');
+            if (whEl) whEl.value = webhookUrl;
+
+            // Đổ dữ liệu vào Admin Settings
+            const setBankId = document.getElementById('set-bank-id');
+            if (setBankId && state.settings) {
+                setBankId.value = state.settings.bank_id;
+                document.getElementById('set-bank-acc').value = state.settings.bank_acc;
+                document.getElementById('set-bank-name').value = state.settings.bank_name;
+                document.getElementById('set-contact-fb').value = state.settings.contact_fb || '';
+                document.getElementById('set-contact-zalo').value = state.settings.contact_zalo || '';
+                document.getElementById('set-contact-hotline').value = state.settings.contact_hotline || '';
+            }
+
+            // Đổ dữ liệu vào UI Profile (Liên hệ)
+            const linkFb = document.getElementById('link-fb');
+            if (linkFb && state.settings) {
+                let fbUrl = state.settings.contact_fb || '#';
+                if (fbUrl !== '#' && !fbUrl.startsWith('http')) fbUrl = 'https://' + fbUrl;
+                linkFb.href = fbUrl;
+
+                let zaloUrl = state.settings.contact_zalo || '';
+                if (zaloUrl) {
+                    if (zaloUrl.startsWith('http')) {
+                        document.getElementById('link-zalo').href = zaloUrl;
+                    } else {
+                        // Nếu là số điện thoại, dùng zalo.me chuẩn
+                        document.getElementById('link-zalo').href = `https://zalo.me/${zaloUrl.replace(/\s+/g, '')}`;
+                    }
+                }
+                
+                document.getElementById('link-hotline').href = `tel:${state.settings.contact_hotline}`;
+                document.getElementById('text-hotline').innerText = state.settings.contact_hotline || 'Chưa cập nhật';
+            }
+
+            // Token cá nhân riêng của từng user
+            const userTokenEl = document.getElementById('user-api-token');
+            if (userTokenEl) userTokenEl.value = state.user.api_token || '';
+
+            // Cập nhật mã chuyển khoản cá nhân của user
+            const transferEx = document.getElementById('transfer-code-example');
+            if (transferEx) transferEx.innerText = `QUYETDEV${state.user.id}  (Mã của bạn — bắt buộc ghi vào nội dung CK)`;
+
+            // Render danh sách gói dịch vụ
+            const pkgList = document.getElementById('package-list');
+            if (pkgList) {
+                pkgList.innerHTML = state.packages.map(p => {
+                    const isCurrent = state.user.current_package_id == p.id && state.user.days_left > 0;
+                    return `
+                    <div class="pricing-card ${isCurrent ? 'premium' : ''}" style="border-color: ${isCurrent ? 'var(--accent-emerald)' : 'rgba(255,255,255,0.1)'}">
+                        <div class="pricing-info">
+                            <h4 style="display:flex; align-items:center; gap:8px;">${p.name} ${isCurrent ? `<span style="background:var(--accent-emerald); color:white; font-size:8px; padding:2px 8px; border-radius:100px;">ĐANG DÙNG</span>` : ''}</h4>
+                            <p>${isCurrent ? `Còn lại: <b style="color:var(--accent-emerald)">${state.user.days_left > 5000 ? 'Vĩnh viễn' : state.user.days_left + ' ngày'}</b>` : p.description}</p>
+                        </div>
+                        <div style="text-align: right; flex-shrink: 0;">
+                            <div class="pricing-price" style="color: ${isCurrent ? 'var(--accent-emerald)' : 'var(--accent-blue)'}">${parseInt(p.price) > 0 ? parseInt(p.price).toLocaleString() + 'đ' : 'FREE'}</div>
+                            ${isCurrent ? '' : `<button class="btn-copy" onclick="buyPackage(${p.id})">MUA NGAY</button>`}
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('qr-image').src = `https://img.vietqr.io/image/${state.settings.bank_id}-${state.settings.bank_acc}-compact.jpg?amount=0&addInfo=QUYETDEV${state.user.id}&accountName=${encodeURIComponent(state.settings.bank_name)}`;
+            const dBankName = document.getElementById('disp-bank-name');
+            if (dBankName) dBankName.innerText = state.settings.bank_id;
+            
+            const dBankAcc = document.getElementById('disp-bank-acc');
+            if (dBankAcc) dBankAcc.innerText = state.settings.bank_acc;
+            
+            const dBankOwner = document.getElementById('disp-bank-owner');
+            if (dBankOwner) dBankOwner.innerText = state.settings.bank_name;
+            
+            const dUserCode = document.getElementById('disp-user-code');
+            if (dUserCode) dUserCode.innerText = `QUYETDEV${state.user.id}`;
+
+            // Cập nhật tab quản lý tài khoản
+            try {
+                const pb = document.getElementById('profile-balance');
+                if (pb) pb.innerText = parseInt(state.user.balance).toLocaleString() + 'đ';
+                const ptc = document.getElementById('profile-transfer-code');
+                if (ptc) ptc.value = `QUYETDEV${state.user.id}`;
+                const ppn = document.getElementById('profile-package-name');
+                const ppr = document.getElementById('profile-package-remain');
+                const pps = document.getElementById('profile-package-status');
+                if (ppn && ppr && pps) {
+                    if (state.user.current_package_id && state.packages && state.packages.length > 0) {
+                        const pkg = state.packages.find(p => p.id == state.user.current_package_id);
+                        if (pkg) {
+                            ppn.innerText = pkg.name;
+                            ppn.style.color = 'var(--accent-emerald)';
+                            pps.innerText = "Đang hoạt động";
+                            pps.style.background = 'var(--accent-emerald)';
+                        } else {
+                            ppn.innerText = "Gói không xác định";
+                        }
+                        
+                        const daysText = (state.user.days_left && state.user.days_left > 5000) ? "Vĩnh viễn" : (state.user.days_left || 0) + " ngày";
+                        const creds = (state.user.credits && state.user.credits > 900000) ? "Vô hạn" : (state.user.credits || 0);
+                        ppr.innerText = `${daysText} | ${creds} lượt`;
+
+                        const warningDiv = document.getElementById('expire-warning');
+                        if (warningDiv) {
+                            if (state.user.days_left > 0 && state.user.days_left <= 2) {
+                                warningDiv.style.display = 'block';
+                                warningDiv.innerText = `⚠️ Gói của bạn sắp hết hạn sau ${state.user.days_left} ngày. Cần gia hạn ngay để không bị gián đoạn!`;
+                            } else {
+                                warningDiv.style.display = 'none';
+                            }
+                        }
+
+                        const arToggle = document.getElementById('auto-renew-toggle');
+                        if (arToggle) arToggle.checked = state.user.auto_renew == 1;
+
+                    } else {
+                        ppn.innerText = "Chưa đăng ký gói";
+                        ppn.style.color = 'var(--text-secondary)';
+                        ppr.innerText = "--";
+                        pps.innerText = "Hết hạn/Chưa mua";
+                        pps.style.background = 'rgba(255,255,255,0.1)';
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
+
+            if (state.user.role === 'admin' && !document.querySelector('[data-tab="admin"]')) {
+                const adminTab = document.createElement('div');
+                adminTab.className = "nav-item"; 
+                adminTab.setAttribute('data-tab', 'admin');
+                adminTab.innerHTML = `<span class="nav-icon">🛡️</span>Admin`; 
+                adminTab.onclick = () => switchTab(adminTab);
+                document.getElementById('main-nav').appendChild(adminTab);
+            }
+        }
+
+        async function buyPackage(id) {
+            const res = await api('buy_package', { packageId: id });
+            if (res && res.status === 'success') { showModal('Thành công', res.message, '🎉'); fetchProfile(); }
+        }
+
+
+        function switchTabById(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            if (tabId === 'admin') fetchAdminStats();
+        }
+
+        function switchTab(item) {
+            const tab = item.getAttribute('data-tab');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            switchTabById(tab);
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => { item.onclick = () => switchTab(item); });
+        
+        document.getElementById('btn-save-admin').onclick = async () => {
+            const res = await api('admin_save', { 
+                bankId: document.getElementById('set-bank-id').value,
+                bankAcc: document.getElementById('set-bank-acc').value,
+                bankName: document.getElementById('set-bank-name').value,
+                contactFb: document.getElementById('set-contact-fb').value,
+                contactZalo: document.getElementById('set-contact-zalo').value,
+                contactHotline: document.getElementById('set-contact-hotline').value
+            });
+            if (res && res.status === 'success') showModal('Hệ thống', 'Đã lưu cấu hình mới!');
+        };
+
+        async function saveWebhookUrl() {
+            const inputs = document.querySelectorAll('.private-api-url');
+            const urls = Array.from(inputs).map(inp => inp.value.trim()).filter(u => u !== '');
+            if (urls.length === 0) return showModal('Thông báo', 'Vui lòng nhập ít nhất 1 URL.', '⚠️');
+            const finalString = urls.join(',');
+            const res = await api('save_webhook_url', { webhookUrl: finalString });
+            if (res && res.status === 'success') {
+                state.user.webhook_url = finalString;
+                showModal('Đã lưu', 'URL Webhook đã được lưu vào tài khoản!', '✅');
+            }
+        }
+
+        async function toggleAutoRenew(el) {
+            const isEnabled = el.checked ? 1 : 0;
+            const res = await api('toggle_auto_renew', { state: isEnabled });
+            if (res && res.status === 'success') {
+                state.user.auto_renew = isEnabled;
+                showModal('Thành công', isEnabled ? 'Đã bật Tự động gia hạn. Hệ thống sẽ tự động trừ trừ số dư khi gói của bạn kết thúc.' : 'Đã tắt Tự động gia hạn.', '✅');
+            } else {
+                el.checked = !isEnabled;
+            }
+        }
+
+        function addWebhookUrlField() {
+            const div = document.createElement('div');
+            div.style = "display: flex; gap: 8px;";
+            div.innerHTML = `<input type="text" class="private-api-url" placeholder="https://..." style="flex: 1; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--accent-emerald);"><button class="btn-copy" onclick="this.parentElement.remove()" style="background: rgba(244,63,94,0.15); color: var(--accent-rose);">❌</button>`;
+            document.getElementById('webhook-url-container').appendChild(div);
+        }
+
+        async function regenToken() {
+            showConfirm('Đổi Token Mới', 'Tạo Token mới sẽ làm mất hiệu lực cấu hình API hiện tại. Bạn có chắc chắn muốn liên kết lại từ đầu?', 'XÁC NHẬN ĐỔI', async () => {
+                const res = await api('regen_token');
+                if (res && res.status === 'success') {
+                    state.user.api_token = res.token;
+                    const el = document.getElementById('user-api-token');
+                    if (el) el.value = res.token;
+                    showModal('Token Mới', 'Token mới đã tạo!\n\n' + res.token, '🔑');
+                }
+            });
+        }
+
+        async function changePassword() {
+            const newPassword = document.getElementById('profile-new-pass').value;
+            if (newPassword.length < 6) return showModal('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự!', '⚠️');
+            const res = await api('change_password', { newPassword });
+            if (res && res.status === 'success') {
+                showModal('Thành công', res.message, '✅');
+                document.getElementById('profile-new-pass').value = '';
+                localStorage.removeItem('qd_user');
+                if (state.pollingInterval) clearInterval(state.pollingInterval);
+                setTimeout(() => location.reload(), 2000);
+            }
+        }
+
+        function showTopupNotification(amount) {
+            const el = document.getElementById('topup-noti');
+            document.getElementById('topup-noti-msg').innerText = `Bạn vừa được cộng +${amount.toLocaleString()}đ vào tài khoản.`;
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 5000); // Tự biến mất after 5s
+        }
+
+        function showFireworks() {
+            const colors = ['#38bdf8', '#818cf8', '#10b981', '#f59e0b', '#f43f5e', '#ec4899'];
+            for (let i = 0; i < 40; i++) {
+                const f = document.createElement('div');
+                f.className = 'firework';
+                f.style.background = colors[Math.floor(Math.random() * colors.length)];
+                f.style.left = '50%';
+                f.style.top = '50%';
+                
+                const tx = (Math.random() - 0.5) * 500;
+                const ty = (Math.random() - 0.5) * 500;
+                f.style.setProperty('--tx', `${tx}px`);
+                f.style.setProperty('--ty', `${ty}px`);
+                f.style.animation = `explode ${1 + Math.random()}s forwards cubic-bezier(0, 1, 0.5, 1)`;
+                
+                document.body.appendChild(f);
+                setTimeout(() => f.remove(), 2000);
+            }
+        }
+
+        function requestAppPermission(type) {
+            if (type === 'notification') {
+                showConfirm('Cấp Quyền Thông Báo', 'Để app có thể xử lý tự động, hệ thống sẽ chuyển bạn đến Cài Đặt hệ thống. Hãy cấp quyền Đọc Thông Báo (Notification Access) cho WebFL/Bank App nhé!', 'MỞ CÀI ĐẶT', () => {
+                    try {
+                        if (window.Android && typeof window.Android.requestNotification === 'function') {
+                            window.Android.requestNotification();
+                        } else if (window.Android && typeof window.Android.openNotificationSettings === 'function') {
+                            window.Android.openNotificationSettings();
+                        } else {
+                            window.location.href = "appintent://request_notification";
+                        }
+                    } catch(e) {}
+                });
+            } else {
+                showConfirm('Bật Chạy Ngầm', 'Việc này sẽ đưa bạn sang Cài đặt Tối ưu màn hình/Pin tĩnh. Vui lòng chọn "Không hạn chế" hoặc tắt "Tối ưu hóa Pin".', 'MỞ THIẾT LẬP', () => {
+                    try {
+                        if (window.Android && typeof window.Android.requestIgnoreBatteryOptimizations === 'function') {
+                            window.Android.requestIgnoreBatteryOptimizations();
+                        } else if (window.Android && typeof window.Android.openBatterySettings === 'function') {
+                            window.Android.openBatterySettings();
+                        } else {
+                            window.location.href = "appintent://request_battery";
+                        }
+                    } catch(e) {}
+                });
+            }
+        }
+
+        // Thay alert logout mặc định
+        document.getElementById('btn-logout').onclick = () => { 
+            showConfirm('Đăng Xuất', 'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng Không?', 'ĐĂNG XUẤT', () => {
+                localStorage.removeItem('qd_user'); 
+                if (state.pollingInterval) clearInterval(state.pollingInterval);
+                location.reload(); 
+            });
+        };
+        
+        function copyText(text) { navigator.clipboard.writeText(text).then(() => showModal('Copy', 'Đã lưu: ' + text)); }
+    </script>
+</body>
+</html>
