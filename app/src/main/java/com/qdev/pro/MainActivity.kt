@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
                 
+                // 1. Xử lý các App Intent đặc biệt của chúng ta
                 if (url.startsWith("appintent://")) {
                     when {
                         url.contains("request_notification") -> {
@@ -99,8 +100,30 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    return true // Ngăn không cho WebView load URL lạ này
+                    return true 
                 }
+
+                // 2. Xử lý Link Tài liệu Tài liệu Nội bộ (giữ trong app)
+                if (url.startsWith("file:///android_asset/")) {
+                    return false // Cho phép WebView load bình thường
+                }
+
+                // 3. Xử lý mở nhanh ứng dụng bên thứ 3 (FB, Zalo, Tel, Mail)
+                if (url.startsWith("fb://") || url.startsWith("zalo://") || 
+                    url.startsWith("tel:") || url.startsWith("mailto:") || 
+                    url.startsWith("https://zalo.me/") || url.startsWith("https://m.me/")) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        startActivity(intent)
+                        return true
+                    } catch (e: Exception) {
+                        // Nếu không có App (ví dụ chưa cài FB), hãy để WebView thử load bản web hoặc báo lỗi nhẹ
+                        Toast.makeText(this@MainActivity, "Không tìm thấy ứng dụng hỗ trợ!", Toast.LENGTH_SHORT).show()
+                        return false 
+                    }
+                }
+
+                // 4. Các link web thông thường khác cứ để load tiếp trong WebView
                 return false
             }
         }

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation — QDev Sync</title>
+    <link rel="icon" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --surface: #0f172a;
+            --surface2: #1e293b;
+            --border: rgba(255,255,255,0.07);
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --blue: #38bdf8;
+            --purple: #818cf8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --pink: #ec4899;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ── HEADER ── */
+        .site-header {
+            background: rgba(15,23,42,0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .logo-text { font-size: 16px; font-weight: 800; }
+        .logo-sub { font-size: 10px; color: var(--blue); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+        .back-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: rgba(56,189,248,0.1); color: var(--blue); border-color: var(--blue); }
+
+        /* ── HERO ── */
+        .hero {
+            background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(56,189,248,0.12), transparent),
+                        radial-gradient(ellipse 60% 40% at 90% 50%, rgba(129,140,248,0.08), transparent);
+            padding: 60px 32px 40px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(56,189,248,0.1);
+            border: 1px solid rgba(56,189,248,0.2);
+            color: var(--blue);
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            padding: 5px 14px; border-radius: 100px;
+            margin-bottom: 20px;
+        }
+        .hero h1 { font-size: 40px; font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; }
+        .hero h1 span { background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--muted); font-size: 15px; max-width: 560px; margin: 0 auto; }
+        .version-badges { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .version-badge {
+            padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+        }
+        .v-stable { background: rgba(16,185,129,0.1); color: var(--emerald); border: 1px solid rgba(16,185,129,0.2); }
+        .v-info { background: rgba(56,189,248,0.1); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
+        .v-warn { background: rgba(245,158,11,0.1); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px; }
+
+        /* ── SECTION ── */
+        .section { margin-bottom: 56px; }
+        .section-title {
+            font-size: 22px; font-weight: 800; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-desc { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+        /* ── ENDPOINT CARD ── */
+        .endpoint-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .endpoint-header {
+            padding: 18px 22px;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+        .method-badge {
+            padding: 4px 12px; border-radius: 6px;
+            font-size: 12px; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .post { background: rgba(16,185,129,0.12); color: var(--emerald); border: 1px solid rgba(16,185,129,0.2); }
+        .get { background: rgba(56,189,248,0.12); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
+        .endpoint-url {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; color: var(--text); flex: 1;
+        }
+        .endpoint-url span { color: var(--muted); }
+        .endpoint-desc-short { margin-left: auto; font-size: 12px; color: var(--muted); font-weight: 500; }
+
+        .endpoint-body { padding: 22px; }
+        .endpoint-body h4 {
+            font-size: 11px; font-weight: 800; color: var(--muted);
+            letter-spacing: 1px; text-transform: uppercase;
+            margin-bottom: 12px; margin-top: 20px;
+        }
+        .endpoint-body h4:first-child { margin-top: 0; }
+
+        /* ── TABLE ── */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            text-align: left; padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            color: var(--muted); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            border-bottom: 1px solid var(--border);
+        }
+        td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        .param-name { font-family: 'JetBrains Mono', monospace; color: var(--blue); font-size: 12px; }
+        .param-type { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 11px; }
+        .param-req { color: var(--rose); font-size: 11px; font-weight: 700; }
+        .param-opt { color: var(--muted); font-size: 11px; }
+        .param-desc { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+        /* ── CODE BLOCK ── */
+        .code-block {
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 18px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            overflow-x: auto;
+            position: relative;
+        }
+        .code-block .comment { color: #4b5563; }
+        .code-block .key { color: var(--blue); }
+        .code-block .str { color: var(--emerald); }
+        .code-block .num { color: var(--amber); }
+        .code-block .kw { color: var(--purple); }
+        .code-block .hdr { color: var(--pink); }
+        .copy-btn {
+            position: absolute; top: 10px; right: 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px; font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .copy-btn:hover { background: var(--blue); color: white; border-color: var(--blue); }
+
+        /* ── ALERT ── */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: flex; gap: 10px;
+        }
+        .alert-warn { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18); color: #fbbf24; }
+        .alert-info { background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.18); color: var(--blue); }
+        .alert-success { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.18); color: var(--emerald); }
+
+        /* ── RESPONSE TABS ── */
+        .resp-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+        .resp-tab {
+            padding: 8px 16px; font-size: 12px; font-weight: 700;
+            color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .resp-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+
+        /* ── FLOW STEPS ── */
+        .flow { display: flex; flex-direction: column; gap: 0; }
+        .flow-item {
+            display: flex; gap: 16px; padding-bottom: 20px;
+            position: relative;
+        }
+        .flow-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 15px; top: 34px; bottom: 0;
+            width: 2px;
+            background: linear-gradient(var(--blue), transparent);
+        }
+        .flow-num {
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800;
+        }
+        .flow-content h5 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .flow-content p { font-size: 12px; color: var(--muted); }
+
+        /* ── DIVIDER ── */
+        .divider { height: 1px; background: var(--border); margin: 48px 0; }
+
+        /* ── TOC ── */
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-bottom: 40px;
+        }
+        .toc h3 { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+        .toc a {
+            display: block; color: var(--muted); text-decoration: none;
+            font-size: 13px; padding: 5px 0;
+            transition: color 0.2s;
+        }
+        .toc a:hover { color: var(--blue); }
+        .toc .toc-sub { padding-left: 16px; font-size: 12px; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .hero { padding: 40px 20px 30px; }
+            .hero h1 { font-size: 28px; }
+            .hero p { font-size: 14px; }
+            .site-header { padding: 12px 16px; }
+            .logo-text { font-size: 14px; }
+            .logo-icon { width: 32px; height: 32px; font-size: 16px; }
+            .back-btn { padding: 6px 12px; font-size: 12px; }
+            
+            .container { padding: 24px 16px; }
+            .section-title { font-size: 18px; }
+            
+            .overview-grid { grid-template-columns: 1fr !important; }
+            
+            .endpoint-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .endpoint-url { font-size: 12px; color: var(--text); word-break: break-all; }
+            .endpoint-desc-short { margin-left: 0; font-size: 11px; }
+            
+            .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border); }
+            table { min-width: 500px; }
+            
+            .code-block { font-size: 11px; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+    <div class="logo">
+        <div>
+            <div class="logo-text">QDev Sync</div>
+            <div class="logo-sub">API Reference</div>
+        </div>
+    </div>
+    <a href="preview.html" class="back-btn">← Quay lại App</a>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-badge">📘 API Documentation</div>
+    <h1>Hướng dẫn kết nối <span>Webhook API</span></h1>
+    <p>Tài liệu đầy đủ để tích hợp chuyển khoản tự động vào hệ thống QDev Sync của bạn.</p>
+    <div class="version-badges">
+        <span class="version-badge v-stable">✓ V7.5 Stable</span>
+        <span class="version-badge v-info">2 Endpoints</span>
+        <span class="version-badge v-warn">⚡ XAMPP / PHP 7.4+</span>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+    <!-- TOC -->
+    <div class="toc">
+        <h3>Mục lục</h3>
+        <a href="#overview">📌 Tổng quan</a>
+        <a href="#method1">📱 Phương thức 1 — Android Forwarder App</a>
+        <a class="toc-sub" href="#m1-auth">→ Xác thực</a>
+        <a class="toc-sub" href="#m1-params">→ Tham số gửi lên</a>
+        <a class="toc-sub" href="#m1-example">→ Ví dụ thực tế</a>
+        <a href="#method2">🏦 Phương thức 2 — SePay / Casso Webhook</a>
+        <a class="toc-sub" href="#m2-auth">→ Xác thực</a>
+        <a class="toc-sub" href="#m2-body">→ Payload JSON</a>
+        <a class="toc-sub" href="#m2-example">→ Ví dụ thực tế</a>
+        <a href="#pattern">🔑 Cú pháp nội dung chuyển khoản</a>
+        <a href="#response">📤 Định dạng Response</a>
+        <a href="#errors">⚠️ Mã lỗi</a>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section" id="overview">
+        <div class="section-title">📌 Tổng quan</div>
+        <div class="section-desc">QDev Sync hỗ trợ 2 phương thức nhận thông báo giao dịch. Chọn 1 trong 2 tuỳ thuộc vào hạ tầng của bạn.</div>
+
+        <div class="overview-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div style="background: var(--surface); border: 1px solid rgba(245,158,11,0.2); border-radius: 16px; padding: 20px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">📱</div>
+                <div style="font-weight: 800; margin-bottom: 6px; color: var(--amber);">Android Forwarder</div>
+                <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">App chạy trên điện thoại, đọc thông báo push từ App ngân hàng và gửi POST đến server. Phù hợp khi không dùng VAS/API ngân hàng.</div>
+            </div>
+            <div style="background: var(--surface); border: 1px solid rgba(56,189,248,0.2); border-radius: 16px; padding: 20px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">🏦</div>
+                <div style="font-weight: 800; margin-bottom: 6px; color: var(--blue);">SePay / Casso</div>
+                <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">Dịch vụ đọc sao kê ngân hàng tự động, gọi webhook khi có giao dịch mới. Đáng tin cậy hơn, hỗ trợ nhiều ngân hàng.</div>
+            </div>
+        </div>
+
+        <div class="alert alert-warn">
+            ⚠️ <div>Chỉ cần cấu hình <strong>1 trong 2 phương thức</strong>. Dùng cả 2 cùng lúc có thể gây nạp tiền trùng lặp.</div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- METHOD 1 -->
+    <div class="section" id="method1">
+        <div class="section-title">📱 Phương thức 1 — Android Forwarder App</div>
+        <div class="section-desc">App đọc thông báo SMS/Push trên điện thoại Android và gửi POST về server của bạn.</div>
+
+        <div class="endpoint-card">
+            <div class="endpoint-header">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-url"><span>https://yourdomain.com/appbank/</span>webhook_private.php</span>
+            </div>
+            <div class="endpoint-body">
+
+                <div class="alert alert-info" id="m1-auth">
+                    🔑 <div><strong>Xác thực:</strong> Gửi token qua header <code style="color:var(--pink)">X-Private-Token</code> hoặc qua field <code style="color:var(--pink)">token</code> trong POST body.</div>
+                </div>
+
+                <h4 id="m1-params">Headers yêu cầu</h4>
+                <div style="background: var(--surface2); border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+                    <div class="table-wrapper">
+            <table>
+                        <thead><tr><th>Header</th><th>Giá trị</th><th>Mô tả</th></tr></thead>
+                        <tbody>
+                            <tr><td class="param-name">X-Private-Token</td><td class="param-type">string</td><td class="param-desc">Token cá nhân của tài khoản (lấy từ Tab API trong App)</td></tr>
+                            <tr><td class="param-name">Content-Type</td><td class="param-type">application/x-www-form-urlencoded</td><td class="param-desc">Định dạng dữ liệu POST thông thường</td></tr>
+                        </tbody>
+                    </table>
+        </div>
+                </div>
+
+                <h4>POST Body</h4>
+                <div style="background: var(--surface2); border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+                    <div class="table-wrapper">
+            <table>
+                        <thead><tr><th>Field</th><th>Kiểu</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td class="param-name">title</td>
+                                <td class="param-type">string</td>
+                                <td class="param-opt">Tuỳ chọn</td>
+                                <td class="param-desc">Tiêu đề thông báo từ App ngân hàng</td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">content</td>
+                                <td class="param-type">string</td>
+                                <td class="param-req">Bắt buộc</td>
+                                <td class="param-desc">Nội dung đầy đủ của thông báo. Phải chứa số tiền và mã QD{ID}.<br>VD: <span style="color:var(--emerald);font-family:monospace">MB: +50,000VND ND: QD15 nap tien</span></td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">token</td>
+                                <td class="param-type">string</td>
+                                <td class="param-opt">Tuỳ chọn</td>
+                                <td class="param-desc">Có thể gửi token qua đây thay vì header</td>
+                            </tr>
+                        </tbody>
+                    </table>
+        </div>
+                </div>
+
+                <h4 id="m1-example">Ví dụ Request</h4>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+<span class="comment"># Gửi bằng cURL</span>
+curl -X POST https://yourdomain.com/appbank/webhook_private.php \
+  -H <span class="str">"X-Private-Token: QD_A3F2B9C1_15"</span> \
+  -d <span class="str">"title=MB Bank&content=MB: +50,000VND tai MB ND: QD15 nap tien"</span>
+                </div>
+
+                <h4 style="margin-top: 20px;">Cách hệ thống xử lý nội dung</h4>
+                <div class="flow">
+                    <div class="flow-item">
+                        <div class="flow-num">1</div>
+                        <div class="flow-content">
+                            <h5>Trích xuất số tiền</h5>
+                            <p>Regex tìm pattern <code style="color:var(--emerald)">+50,000</code> hoặc <code style="color:var(--emerald)">nhận được 50.000đ</code> trong nội dung.</p>
+                        </div>
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-num">2</div>
+                        <div class="flow-content">
+                            <h5>Nhận diện người dùng</h5>
+                            <p>Regex tìm <code style="color:var(--blue)">QD\d+</code> trong nội dung. VD: <code>QD15</code> → User ID = 15.</p>
+                        </div>
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-num">3</div>
+                        <div class="flow-content">
+                            <h5>Cộng số dư</h5>
+                            <p>Cập nhật <code>balance</code> trong bảng <code>users</code> và tạo bản ghi giao dịch.</p>
+                        </div>
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-num">4</div>
+                        <div class="flow-content">
+                            <h5>Chống trùng lặp</h5>
+                            <p>Hash MD5 của nội dung được lưu để không xử lý cùng 1 giao dịch 2 lần.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- METHOD 2 -->
+    <div class="section" id="method2">
+        <div class="section-title">🏦 Phương thức 2 — SePay / Casso Webhook</div>
+        <div class="section-desc">Dịch vụ đọc sao kê tự động gọi webhook khi có giao dịch mới vào tài khoản ngân hàng.</div>
+
+        <div class="endpoint-card">
+            <div class="endpoint-header">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-url"><span>https://yourdomain.com/appbank/</span>webhook.php</span>
+            </div>
+            <div class="endpoint-body">
+
+                <div class="alert alert-info" id="m2-auth">
+                    🔑 <div><strong>Xác thực:</strong> Header <code style="color:var(--pink)">Authorization: Bearer {SECRET_TOKEN}</code>. Lấy Secret Token từ Tab API trong App (Admin).</div>
+                </div>
+
+                <h4>Headers yêu cầu</h4>
+                <div style="background: var(--surface2); border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+                    <div class="table-wrapper">
+            <table>
+                        <thead><tr><th>Header</th><th>Giá trị</th></tr></thead>
+                        <tbody>
+                            <tr><td class="param-name">Authorization</td><td class="param-desc"><code style="color:var(--emerald)">Bearer qd_secret_webhook_778899</code></td></tr>
+                            <tr><td class="param-name">Content-Type</td><td class="param-desc"><code style="color:var(--emerald)">application/json</code></td></tr>
+                        </tbody>
+                    </table>
+        </div>
+                </div>
+
+                <h4 id="m2-body">JSON Body (SePay format)</h4>
+                <div style="background: var(--surface2); border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+                    <div class="table-wrapper">
+            <table>
+                        <thead><tr><th>Field</th><th>Kiểu</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead>
+                        <tbody>
+                            <tr><td class="param-name">amount</td><td class="param-type">number</td><td class="param-req">Bắt buộc</td><td class="param-desc">Số tiền giao dịch (đơn vị: VND). VD: <code>50000</code></td></tr>
+                            <tr><td class="param-name">content</td><td class="param-type">string</td><td class="param-req">Bắt buộc</td><td class="param-desc">Nội dung chuyển khoản. Phải chứa <code style="color:var(--blue)">QD{ID}</code></td></tr>
+                            <tr><td class="param-name">referenceCode</td><td class="param-type">string</td><td class="param-req">Bắt buộc</td><td class="param-desc">Mã giao dịch duy nhất từ ngân hàng (dùng để chống trùng lặp)</td></tr>
+                            <tr><td class="param-name">gateway</td><td class="param-type">string</td><td class="param-opt">Tuỳ chọn</td><td class="param-desc">Tên ngân hàng. VD: <code>MB</code>, <code>VCB</code></td></tr>
+                            <tr><td class="param-name">description</td><td class="param-type">string</td><td class="param-opt">Tuỳ chọn</td><td class="param-desc">Mô tả giao dịch (dùng thay <code>content</code> nếu không có)</td></tr>
+                        </tbody>
+                    </table>
+        </div>
+                </div>
+
+                <h4 id="m2-example">Ví dụ Request (SePay gửi đến server)</h4>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+POST /appbank/webhook.php HTTP/1.1
+<span class="hdr">Authorization:</span> <span class="str">Bearer qd_secret_webhook_778899</span>
+<span class="hdr">Content-Type:</span> <span class="str">application/json</span>
+
+{
+  <span class="key">"amount"</span>: <span class="num">50000</span>,
+  <span class="key">"content"</span>: <span class="str">"QD15 nap tien thang 4"</span>,
+  <span class="key">"referenceCode"</span>: <span class="str">"FT24115ABCDE"</span>,
+  <span class="key">"gateway"</span>: <span class="str">"MB"</span>,
+  <span class="key">"id"</span>: <span class="num">12345</span>
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- PATTERN -->
+    <div class="section" id="pattern">
+        <div class="section-title">🔑 Cú pháp nội dung chuyển khoản</div>
+        <div class="section-desc">Để hệ thống tự động nhận diện người dùng, nội dung chuyển khoản phải chứa chuỗi <strong>QUYETDEV</strong> + ID tài khoản.</div>
+
+        <div class="alert alert-success">
+            ✅ <div>Pattern nhận diện chính xác: <strong>QUYETDEV</strong> + khoảng trắng (tuỳ chọn) + <strong>số ID</strong> của người dùng.<br>
+            Ví dụ: Tài khoản ID = 15 → ghi <code style="color:var(--emerald)">QUYETDEV15</code> hoặc <code style="color:var(--emerald)">QUYETDEV 15</code></div>
+        </div>
+
+        <div class="code-block" style="margin-bottom: 16px;">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+<span class="comment"># Regex được dùng trong cả 2 file PHP</span>
+<span class="kw">preg_match</span>(<span class="str">'/QUYETDEV\s*(\d+)/i'</span>, $content, $matches);
+<span class="comment"># '\s*' = khoảng trắng tuỳ chọn | '/i' = không phân biệt hoa thường</span>
+        </div>
+
+        <div style="background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border);">
+            <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Nội dung chuyển khoản</th><th>Kết quả</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">QUYETDEV15 nap tien</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15</td></tr>
+                    <tr><td class="param-name">QUYETDEV 15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (có khoảng trắng)</td></tr>
+                    <tr><td class="param-name">quyetdev15 thanh toan</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (viết thường)</td></tr>
+                    <tr><td class="param-name">THANH TOAN QUYETDEV15</td><td style="color:var(--emerald);">✅ Nhận diện → User ID 15 (ở cuối nội dung)</td></tr>
+                    <tr><td class="param-name">nap tien 50k</td><td style="color:var(--rose);">❌ Bỏ qua — Không có chuỗi QUYETDEV</td></tr>
+                    <tr><td class="param-name">QUYET15 nap</td><td style="color:var(--rose);">❌ Bỏ qua — Thiếu chữ "DEV"</td></tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+
+        <div class="alert alert-warn" style="margin-top: 16px;">
+            ⚠️ <div>ID người dùng được hiển thị trong Tab <strong>API</strong> của ứng dụng. Ví dụ ID = 15 → nội dung chuyển khoản phải có <code>QUYETDEV15</code>.</div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- RESPONSE -->
+    <div class="section" id="response">
+        <div class="section-title">📤 Định dạng Response</div>
+
+        <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--emerald);">✅ Thành công</h4>
+        <div class="code-block" style="margin-bottom: 20px;">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+{
+  <span class="key">"status"</span>: <span class="str">"success"</span>,
+  <span class="key">"message"</span>: <span class="str">"Balance updated successfully"</span>,
+  <span class="key">"user_id"</span>: <span class="num">15</span>,
+  <span class="key">"amount"</span>: <span class="num">50000</span>
+}
+        </div>
+
+        <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--amber);">⚠️ Bỏ qua (không nạp nhưng không lỗi)</h4>
+        <div class="code-block" style="margin-bottom: 20px;">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+{
+  <span class="key">"status"</span>: <span class="str">"ignore"</span>,
+  <span class="key">"message"</span>: <span class="str">"Transaction content does not match pattern"</span>
+}
+        </div>
+
+        <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--rose);">❌ Lỗi</h4>
+        <div class="code-block">
+            <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+HTTP/1.1 401 Unauthorized
+{ <span class="key">"status"</span>: <span class="str">"error"</span>, <span class="key">"message"</span>: <span class="str">"Unauthorized"</span> }
+
+HTTP/1.1 400 Bad Request
+{ <span class="key">"status"</span>: <span class="str">"error"</span>, <span class="key">"message"</span>: <span class="str">"Invalid JSON"</span> }
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ERRORS -->
+    <div class="section" id="errors">
+        <div class="section-title">⚠️ Mã lỗi & Xử lý</div>
+        <div style="background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border);">
+            <div class="table-wrapper">
+            <table>
+                <thead><tr><th>HTTP Status</th><th>Nguyên nhân</th><th>Cách xử lý</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><span class="method-badge" style="background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.2)">200 OK</span></td>
+                        <td class="param-desc">Thành công hoặc bỏ qua (ignore)</td>
+                        <td class="param-desc">Kiểm tra field <code>status</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge" style="background:rgba(244,63,94,0.1);color:var(--rose);border:1px solid rgba(244,63,94,0.2)">401</span></td>
+                        <td class="param-desc">Sai Token xác thực</td>
+                        <td class="param-desc">Kiểm tra lại Token trong App và webhook_private.php</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge" style="background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2)">400</span></td>
+                        <td class="param-desc">JSON không hợp lệ</td>
+                        <td class="param-desc">Kiểm tra Content-Type và định dạng JSON gửi lên</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge" style="background:rgba(129,140,248,0.1);color:var(--purple);border:1px solid rgba(129,140,248,0.2)">500</span></td>
+                        <td class="param-desc">Lỗi server / DB</td>
+                        <td class="param-desc">Kiểm tra file <code>bank_log.txt</code> tại thư mục server</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-top:20px;">
+            💡 <div>Mọi request đến <strong>webhook_private.php</strong> đều được ghi vào file <code>bank_log.txt</code> để debug. Kiểm tra file này khi có vấn đề.</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top: 1px solid var(--border); padding-top: 32px; text-align: center; color: var(--muted); font-size: 12px;">
+        <p>QDev Sync API Documentation · V7.5 · Build: Bùi Minh Quyết</p>
+        <p style="margin-top: 8px;"><a href="preview.html" style="color: var(--blue); text-decoration: none;">← Quay lại ứng dụng</a></p>
+    </div>
+</div>
+
+<script>
+    function copyCode(btn) {
+        const block = btn.closest('.code-block');
+        const text = block.innerText.replace('COPY', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✓ COPIED';
+            btn.style.background = 'var(--emerald)';
+            btn.style.color = 'white';
+            setTimeout(() => { btn.textContent = 'COPY'; btn.style.background = ''; btn.style.color = ''; }, 2000);
+        });
+    }
+</script>
+</body>
+</html>
