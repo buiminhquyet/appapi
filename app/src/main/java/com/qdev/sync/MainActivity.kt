@@ -53,25 +53,9 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = WebChromeClient()
 
-        val savedUrl = settings.apiUrl
-        
-        // Địa chỉ IP của bạn hiện tại (hoặc thay đổi sau này)
-        val defaultDashboardUrl = "http://192.168.1.13/appbank/preview.html"
-
-        if (savedUrl.isEmpty()) {
-            webView.loadUrl(defaultDashboardUrl)
-            // ẨN LUÔN BẢNG CÀI ĐẶT -> HIỆN TRANG WEB NGAY LẬP TỨC
-            binding.settingsLayout.visibility = View.GONE
-        } else {
-            // Nếu người dùng nhập Webhook URL thì suy ra link Preview.html
-            val dashboardUrl = if (savedUrl.contains("/appbank/")) {
-                savedUrl.substringBefore("/appbank/") + "/appbank/preview.html"
-            } else {
-                savedUrl
-            }
-            webView.loadUrl(dashboardUrl)
-            binding.settingsLayout.visibility = View.GONE
-        }
+        // Tải giao diện Web đã được nhúng sẵn bên trong APK (Offline, không cần IP)
+        webView.loadUrl("file:///android_asset/index.html")
+        binding.settingsLayout.visibility = View.GONE
     }
 
     private fun setupListeners() {
