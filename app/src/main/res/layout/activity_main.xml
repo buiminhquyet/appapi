@@ -1,239 +1,273 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0f172a">
 
-    <LinearLayout
+    <!-- THE WEB DASHBOARD -->
+    <WebView
+        android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_height="match_parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="QDev Pro"
-            android:textColor="#f8fafc"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="5dp"/>
+    <!-- THE SETTINGS UI (OVERLAY) -->
+    <ScrollView
+        android:id="@+id/settingsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#e6020617" 
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="HỆ THỐNG FORWARDER - V7.5"
-            android:textColor="#10b981"
-            android:textSize="12sp"
-            android:letterSpacing="0.1"
-            android:textStyle="bold"
-            android:layout_marginBottom="25dp"/>
-
-        <!-- Permission Card (Neon Border style) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/card_bg_dark"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:layout_marginBottom="24dp">
-
-            <TextView
-                android:id="@+id/txtPermissionStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TRẠNG THÁI QUYỀN: CHƯA CẤP"
-                android:textColor="#ffffff"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp"/>
-
-            <Button
-                android:id="@+id/btnPermission"
-                android:layout_width="match_parent"
-                android:layout_height="65dp"
-                android:text="CẤP QUYỀN THÔNG BÁO"
-                android:backgroundTint="#ec4899"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Config Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/card_bg_dark"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:layout_marginBottom="24dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CẤU HÌNH WEBHOOK (SERVER)"
-                android:textColor="#94a3b8"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="20dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ĐỊA CHỈ API (URL)"
-                android:textSize="11sp"
-                android:textColor="#10b981"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp"/>
-
-            <EditText
-                android:id="@+id/editUrl"
-                android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:background="@drawable/input_bg_dark"
-                android:hint="https://..."
-                android:padding="16dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#475569"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:inputType="textUri"
-                android:layout_marginBottom="18dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TOKEN BẢO MẬT"
-                android:textSize="11sp"
-                android:textColor="#10b981"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp"/>
-
-            <EditText
-                android:id="@+id/editToken"
-                android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:background="@drawable/input_bg_dark"
-                android:hint="••••••••••••"
-                android:padding="16dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#475569"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:inputType="textPassword"
-                android:layout_marginBottom="24dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="DỊCH VỤ CHẠY NGẦM"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#ffffff"/>
-
-                <Switch
-                    android:id="@+id/switchService"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnSave"
-                    android:layout_width="0dp"
-                    android:layout_height="65dp"
-                    android:layout_weight="1"
-                    android:text="LƯU LẠI"
-                    android:backgroundTint="#10b981"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:layout_marginEnd="6dp"
-                    android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/btnBattery"
-                    android:layout_width="0dp"
-                    android:layout_height="65dp"
-                    android:layout_weight="1"
-                    android:text="TỐI ƯU PIN"
-                    android:backgroundTint="#f59e0b"
-                    android:textColor="#ffffff"
-                    android:textSize="16sp"
-                    android:layout_marginStart="6dp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnTest"
-                android:layout_width="match_parent"
-                android:layout_height="65dp"
-                android:text="KIỂM TRA KẾT NỐI (TEST URL)"
-                android:backgroundTint="#475569"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:layout_marginTop="12dp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Log Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/card_bg_dark"
             android:orientation="vertical"
             android:padding="20dp">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="QDev Pro"
+                android:textColor="#f8fafc"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="20dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HỆ THỐNG FORWARDER - V7.5"
+                android:textColor="#10b981"
+                android:textSize="12sp"
+                android:letterSpacing="0.1"
+                android:textStyle="bold"
+                android:layout_marginBottom="25dp"/>
+
+            <!-- Permission Card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/card_bg_dark"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:layout_marginBottom="24dp">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="NHẬT KÝ HOẠT ĐỘNG"
-                    android:textStyle="bold"
-                    android:textColor="#94a3b8"
-                    android:textSize="14sp"/>
-
-                <TextView
-                    android:id="@+id/btnClearLogs"
+                    android:id="@+id/txtPermissionStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="XÓA"
-                    android:textColor="#f43f5e"
-                    android:textSize="14sp"
+                    android:text="TRẠNG THÁI QUYỀN: CHƯA CẤP"
+                    android:textColor="#ffffff"
                     android:textStyle="bold"
-                    android:padding="8dp"/>
+                    android:textSize="18sp"
+                    android:layout_marginBottom="16dp"/>
+
+                <Button
+                    android:id="@+id/btnPermission"
+                    android:layout_width="match_parent"
+                    android:layout_height="65dp"
+                    android:text="CẤP QUYỀN THÔNG BÁO"
+                    android:backgroundTint="#ec4899"
+                    android:textColor="#ffffff"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/txtLogs"
+            <!-- Config Card -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:background="#020617"
-                android:padding="15dp"
-                android:textSize="12sp"
-                android:textColor="#10b981"
-                android:text="[Hệ thống V7.5 PRO Sẵn sàng]\n"
-                android:fontFamily="monospace"
-                android:scrollbars="vertical"/>
-        </LinearLayout>
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_bg_dark"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:layout_marginBottom="24dp">
 
-    </LinearLayout>
-</ScrollView>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CẤU HÌNH WEBHOOK (SERVER)"
+                    android:textColor="#94a3b8"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ĐỊA CHỈ API (URL)"
+                    android:textSize="11sp"
+                    android:textColor="#10b981"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp"/>
+
+                <EditText
+                    android:id="@+id/editUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_bg_dark"
+                    android:hint="http://192.168.x.x/appbank/..."
+                    android:padding="16dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#475569"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:inputType="textUri"
+                    android:layout_marginBottom="18dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TOKEN BẢO MẬT"
+                    android:textSize="11sp"
+                    android:textColor="#10b981"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp"/>
+
+                <EditText
+                    android:id="@+id/editToken"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_bg_dark"
+                    android:hint="••••••••••••"
+                    android:padding="16dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#475569"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:inputType="textPassword"
+                    android:layout_marginBottom="24dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="DỊCH VỤ CHẠY NGẦM"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#ffffff"/>
+
+                    <Switch
+                        android:id="@+id/switchService"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSave"
+                        android:layout_width="0dp"
+                        android:layout_height="65dp"
+                        android:layout_weight="1"
+                        android:text="LƯU LẠI"
+                        android:backgroundTint="#10b981"
+                        android:textColor="#000000"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="6dp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnBattery"
+                        android:layout_width="0dp"
+                        android:layout_height="65dp"
+                        android:layout_weight="1"
+                        android:text="TỐI ƯU PIN"
+                        android:backgroundTint="#f59e0b"
+                        android:textColor="#ffffff"
+                        android:textSize="16sp"
+                        android:layout_marginStart="6dp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnTest"
+                    android:layout_width="match_parent"
+                    android:layout_height="65dp"
+                    android:text="KIỂM TRA KẾT NỐI (TEST URL)"
+                    android:backgroundTint="#475569"
+                    android:textColor="#ffffff"
+                    android:textSize="16sp"
+                    android:layout_marginTop="12dp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Log Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_bg_dark"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_marginBottom="100dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="NHẬT KÝ HOẠT ĐỘNG"
+                        android:textStyle="bold"
+                        android:textColor="#94a3b8"
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:id="@+id/btnClearLogs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="XÓA"
+                        android:textColor="#f43f5e"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:padding="8dp"/>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtLogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:background="#020617"
+                    android:padding="15dp"
+                    android:textSize="12sp"
+                    android:textColor="#10b981"
+                    android:text="[Hệ thống V7.5 PRO Sẵn sàng]\n"
+                    android:fontFamily="monospace"
+                    android:scrollbars="vertical"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- FLOATING GEAR BUTTON -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_menu_preferences"
+        app:backgroundTint="#8b5cf6"
+        app:tint="#FFFFFF"
+        android:contentDescription="Settings" />
+
+</RelativeLayout>

@@ -3,6 +3,9 @@ package com.qdev.pro
 import android.content.*
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.qdev.pro.databinding.ActivityMainBinding
@@ -35,11 +38,35 @@ class MainActivity : AppCompatActivity() {
         binding.editToken.setText(settings.apiToken)
         binding.switchService.isChecked = settings.isServiceEnabled
 
+        setupWebView()
         setupListeners()
         checkPermission()
         
         registerReceiver(receiver, IntentFilter("com.qdev.pro.LOG_UPDATE"))
         appendLog("App đã khởi động.")
+    }
+
+    private fun setupWebView() {
+        val webView = binding.webView
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.webViewClient = WebViewClient()
+        webView.webChromeClient = WebChromeClient()
+
+        val savedUrl = settings.apiUrl
+        if (savedUrl.isNotEmpty()) {
+            // Thay thế webhook.php thành thư mục gốc hoặc trang mong muốn
+            val dashboardUrl = if (savedUrl.endsWith("/webhook.php")) {
+                savedUrl.replace("/webhook.php", "/")
+            } else {
+                savedUrl
+            }
+            webView.loadUrl(dashboardUrl)
+            binding.settingsLayout.visibility = View.GONE
+        } else {
+            // Chưa có URL cấu hình -> Hiện màn hình settings
+            binding.settingsLayout.visibility = View.VISIBLE
+        }
     }
 
     private fun setupListeners() {
@@ -58,6 +85,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        binding.fabSettings.setOnClickListener {
+            if (binding.settingsLayout.visibility == View.VISIBLE) {
+                binding.settingsLayout.visibility = View.GONE
+            } else {
+                binding.settingsLayout.visibility = View.VISIBLE
+            }
+        }
+
         binding.btnSave.setOnClickListener {
             settings.apiUrl = binding.editUrl.text.toString()
             settings.apiToken = binding.editToken.text.toString()
@@ -65,6 +100,10 @@ class MainActivity : AppCompatActivity() {
             
             appendLog("Đã lưu cấu hình mới.")
             Toast.makeText(this, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
+            
+            // Reload WebView with new URL
+            setupWebView()
+            binding.settingsLayout.visibility = View.GONE
         }
 
         binding.btnTest.setOnClickListener {
