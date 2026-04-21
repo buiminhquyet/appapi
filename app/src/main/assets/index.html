@@ -458,9 +458,18 @@
             const sessionKey = savedUser.session_key || '';
 
             // Tự động xác định BASE URL của API (Dùng Bridge trên Android hoặc mặc định trên Web)
-            let apiUrl = "api.php"; // Mặc định cho bản Web đặt cùng thư mục
+            let apiUrl = "api.php"; 
             if (window.AndroidBridge && typeof window.AndroidBridge.getApiUrl === 'function') {
                 apiUrl = window.AndroidBridge.getApiUrl();
+                // Nếu người dùng nhập URL webhook, tự động đổi sang api.php để gọi UI
+                if (apiUrl.includes('webhook_private.php')) {
+                    apiUrl = apiUrl.replace('webhook_private.php', 'api.php');
+                } else if (apiUrl.includes('webhook.php')) {
+                    apiUrl = apiUrl.replace('webhook.php', 'api.php');
+                } else if (!apiUrl.endsWith('api.php') && apiUrl.length > 5) {
+                    // Nếu là đường dẫn thư mục, tự thêm api.php
+                    apiUrl = apiUrl.endsWith('/') ? apiUrl + 'api.php' : apiUrl + '/api.php';
+                }
             } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 apiUrl = "api.php";
             } else if (!window.location.protocol.startsWith('file')) {
@@ -470,6 +479,7 @@
                 // Fallback cuối cùng nếu không có gì
                 apiUrl = "https://bachquyet.click/api.php";
             }
+
 
             try {
                 const res = await fetch(`${apiUrl}${apiUrl.includes('?') ? '&' : '?'}action=${action}`, {
