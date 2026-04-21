@@ -84,10 +84,8 @@ class BankNotificationService : NotificationListenerService() {
         
         val fullReport = "App: $packageName | Title: $title | Content: $text $subText $bigText $tickerText | Dump: $dump".trim()
         
-        // NHẬT KÝ CHI TIẾT
-        if (fullReport.isNotEmpty()) {
-            sendStatusBroadcast("QUÉT: $fullReport")
-        }
+        // HEARTBEAT LOG: Cho người dùng biết App đang sống và đang thấy thông báo
+        sendStatusBroadcast("🔍 Thấy TB từ: $packageName")
         
         // KIỂM TRA TỪ KHÓA NẠP TIỀN (Hỗ trợ NAPTIEN, QUYETDEV, QDEV, QD)
         val lowerReport = fullReport.lowercase()
@@ -96,10 +94,14 @@ class BankNotificationService : NotificationListenerService() {
             lowerReport.contains("qdev") || 
             lowerReport.contains("qd")) {
             
-            sendStatusBroadcast("==> KHỚP TỪ KHÓA! Đang gửi đến Server nạp tiền...")
+            sendStatusBroadcast("🚀 KHỚP MÃ NẠP! Đang đẩy lên Server...")
             sendToServer(title, fullReport)
+        } else {
+            // Log nhẹ để admin biết tại sao không bắt (chống trôi log)
+            Log.d("BankMonitor", "Bỏ qua TB không chứa từ khóa: $packageName")
         }
     }
+
 
     private fun sendToServer(title: String, content: String) {
         val url = settings.apiUrl
