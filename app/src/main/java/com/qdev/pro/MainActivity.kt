@@ -83,6 +83,9 @@ class MainActivity : AppCompatActivity() {
         ws.displayZoomControls = false
         ws.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         
+        // --- ADDED: BRIDGE TO CONNECT WEB UI WITH ANDROID SETTINGS ---
+        webView.addJavascriptInterface(WebAppInterface(settings), "AndroidBridge")
+        
         webView.webViewClient = object : android.webkit.WebViewClient() {
             override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
@@ -156,6 +159,27 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/index.html")
         binding.settingsLayout.visibility = View.GONE
     }
+
+    /**
+     * Lớp cầu nối JavaScript (Bridge) để WebView có thể lấy dữ liệu từ Android
+     */
+    inner class WebAppInterface(private val settings: SettingsManager) {
+        @android.webkit.JavascriptInterface
+        fun getApiUrl(): String {
+            return settings.apiUrl
+        }
+        
+        @android.webkit.JavascriptInterface
+        fun getApiToken(): String {
+            return settings.apiToken
+        }
+
+        @android.webkit.JavascriptInterface
+        fun showToast(message: String) {
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun setupListeners() {
         binding.btnPermission.setOnClickListener {

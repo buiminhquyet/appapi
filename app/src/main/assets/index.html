@@ -457,9 +457,22 @@
             const token = savedUser.token || '';
             const sessionKey = savedUser.session_key || '';
 
+            // Tự động xác định BASE URL của API (Dùng Bridge trên Android hoặc mặc định trên Web)
+            let apiUrl = "api.php"; // Mặc định cho bản Web đặt cùng thư mục
+            if (window.AndroidBridge && typeof window.AndroidBridge.getApiUrl === 'function') {
+                apiUrl = window.AndroidBridge.getApiUrl();
+            } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                apiUrl = "api.php";
+            } else if (!window.location.protocol.startsWith('file')) {
+                // Nếu đang chạy trên web thật, dùng chính domain đó
+                apiUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'api.php';
+            } else {
+                // Fallback cuối cùng nếu không có gì
+                apiUrl = "https://bachquyet.click/api.php";
+            }
+
             try {
-                // Sử dụng đường dẫn tương đối để tương thích với mọi hosting
-                const res = await fetch(`api.php?action=${action}`, {
+                const res = await fetch(`${apiUrl}${apiUrl.includes('?') ? '&' : '?'}action=${action}`, {
                     method: body ? 'POST' : 'GET',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -483,10 +496,12 @@
                 if (response.status === 'error' && !silent) showModal('Lỗi', response.message, '❌');
                 return response;
             } catch (e) {
-                if (!silent) showModal('Lỗi kết nối', 'Server bảo trì hoặc DNS hosting của bạn đang bị chặn.', '🔴');
+                console.error("API Error:", e);
+                if (!silent) showModal('Lỗi kết nối', 'Không thể kết nối tới máy chủ.\n\nLưu ý: Nếu dùng App Android, hãy vào mục Cài Đặt (bánh răng) để kiểm tra URL Server.', '🔴');
                 return null;
             }
         }
+
 
         function switchAuthMode(mode) {
             state.authMode = mode;
