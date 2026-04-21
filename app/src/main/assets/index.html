@@ -305,30 +305,52 @@
 
                 <!-- TAB 5: ADMIN -->
                 <section id="tab-admin" class="tab-content hidden">
-                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">CẤU HÌNH HỆ THỐNG</h3>
-                    <div class="card">
-                        <div class="field-group"><label>🆔 MÃ NGÂN HÀNG (VD: MB, VCB)</label><input type="text" id="set-bank-id" class="config-highlight" placeholder="VIB, MB, VCB..."></div>
-                        <div class="field-group"><label>💳 SỐ TÀI KHOẢN NHẬN TIỀN</label><input type="text" id="set-bank-acc" class="config-highlight" placeholder="Nhập số tài khoản của bạn"></div>
-                        <div class="field-group"><label>👤 TÊN CHỦ TÀI KHOẢN</label><input type="text" id="set-bank-name" class="config-highlight" placeholder="Tên không dấu (VD: TRAN VAN A)"></div>
-                        <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;"></div>
-                        <div class="field-group"><label>🔵 LINK FACEBOOK ADMIN</label><input type="text" id="set-contact-fb" class="config-highlight" placeholder="https://facebook.com/username"></div>
-                        <div class="field-group"><label>🟢 LINK ZALO / SĐT ZALO</label><input type="text" id="set-contact-zalo" class="config-highlight" placeholder="032xxxxxxx hoặc link zalo"></div>
-                        <div class="field-group"><label>📞 SỐ ĐIỆN THOẠI HOTLINE</label><input type="text" id="set-contact-hotline" class="config-highlight" placeholder="032xxxxxxx"></div>
-                        <button class="btn-primary" id="btn-save-admin">LƯU THAY ĐỔI CẤU HÌNH</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="font-size: 18px; font-weight: 800; margin: 0;">🛡️ HỆ THỐNG ADMIN</h3>
+                        <div id="admin-disp-version" style="font-size: 10px; background: var(--accent-blue); padding: 4px 8px; border-radius: 6px; font-weight: 800;">V11.1 PRO</div>
                     </div>
-                    <div style="margin-top: 25px;">
-                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">📊 THỐNG KÊ</h3>
-                        <div class="stats-container">
-                            <div class="stats-card revenue"><span class="label">Doanh thu</span><span class="value" id="stat-revenue">0đ</span></div>
-                            <div class="stats-card orders"><span class="label">Đơn hàng</span><span class="value" id="stat-orders">0</span></div>
-                            <div class="stats-card"><span class="label">Thành viên</span><span class="value" id="stat-users">0</span></div>
-                            <div class="stats-card"><span class="label">Lượt dùng</span><span class="value" id="stat-credits">0</span></div>
+
+                    <!-- THỐNG KÊ NHANH (Admin Stats) -->
+                    <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <div class="stat-card" style="padding: 15px;">
+                            <h6 style="margin-bottom: 5px; opacity: 0.7;">Tổng Doanh Thu</h6>
+                            <h4 id="admin-revenue" style="color: var(--accent-emerald); font-size: 18px;">0đ</h4>
+                        </div>
+                        <div class="stat-card" style="padding: 15px;">
+                            <h6 style="margin-bottom: 5px; opacity: 0.7;">Người Dùng</h6>
+                            <h4 id="admin-users" style="font-size: 18px;">0</h4>
                         </div>
                     </div>
-                    <div style="margin-top: 25px;">
-                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">📦 CẤU HÌNH GIÁ GÓI</h3>
-                        <div id="admin-packages-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-                        <button class="btn-primary" style="margin-top:15px; width:100%; background:linear-gradient(135deg, var(--accent-emerald), #059669);" onclick="saveAdminPackages()">LƯU GIÁ GÓI</button>
+
+                    <!-- NHẬT KÝ HOẠT ĐỘNG (Activity Log Table) -->
+                    <div class="card" style="margin-bottom: 20px; padding: 15px;">
+                        <h4 style="margin-bottom: 12px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>📜 Nhật ký Hoạt động</span>
+                            <span style="font-size: 9px; opacity: 0.5;">Auto sync 2s</span>
+                        </h4>
+                        <div style="overflow-x: auto; max-height: 300px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <thead style="position: sticky; top: 0; background: #1e293b; z-index: 10;">
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 8px;">Time</th>
+                                        <th style="padding: 8px;">Content/Reason</th>
+                                        <th style="padding: 8px;">Amount</th>
+                                        <th style="padding: 8px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="webhook-logs-body">
+                                    <tr><td colspan="4" style="padding: 20px; text-align: center; opacity: 0.5;">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px; font-size: 13px; color: var(--accent-blue);">⚙️ CẤU HÌNH NGÂN HÀNG</h4>
+                        <div class="field-group"><label>🆔 MÃ NGÂN HÀNG (MB, VCB...)</label><input type="text" id="set-bank-id" class="config-highlight" placeholder="Nhập mã NH..."></div>
+                        <div class="field-group"><label>💳 SỐ TÀI KHOẢN NHẬN TIỀN</label><input type="text" id="set-bank-acc" class="config-highlight" placeholder="Nhập STK của bạn"></div>
+                        <div class="field-group"><label>👤 TÊN CHỦ TÀI KHOẢN</label><input type="text" id="set-bank-name" class="config-highlight" placeholder="Tên không dấu"></div>
+                        <button class="btn-primary" id="btn-save-admin" style="margin-top: 10px;">LƯU CẤU HÌNH HỆ THỐNG</button>
                     </div>
                 </section>
 
@@ -378,7 +400,8 @@
                 <!-- FOOTER -->
                 <footer style="margin: 20px 0 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                     <p style="font-size: 12px; font-weight: 800; color: var(--text-main); margin-bottom: 5px;">Copyright © 2026 QUYETDEV</p>
-                    <p style="font-size: 10px; color: var(--text-secondary); margin-bottom: 15px;">Phiên bản: V10 ULTIMATE (Siêu Tốc & Tương Thích Tuyệt Đối)</p>
+                    <p style="font-size: 10px; color: var(--text-secondary); margin-bottom: 15px;">Phiên bản: V11.1 REPAIR PRO (Hệ thống Chẩn đoán Đã Khôi Phục)</p>
+
 
                     <div style="display: flex; justify-content: center; gap: 15px;">
 
