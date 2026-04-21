@@ -586,10 +586,18 @@
             // Dùng silent=true để không hiện modal nếu session đã hết hạn
             const res = await api('login', { phone: u.phone, password: u.password }, true);
             if (res && res.status === 'success') {
+                // LƯU Ý QUAN TRỌNG: Phải cập nhật lại localStorage vì login tạo session_key mới!
+                localStorage.setItem('qd_user', JSON.stringify({ 
+                    phone: u.phone, 
+                    password: u.password, 
+                    token: res.user.api_token,
+                    session_key: res.user.session_key
+                }));
                 document.getElementById('auth-overlay').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
                 fetchProfile();
             } else {
+
                 // Credentials cũ không hợp lệ nữa → xóa để không lặp lại
                 localStorage.removeItem('qd_user');
             }
