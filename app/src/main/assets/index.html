@@ -499,8 +499,8 @@
                     body: body ? JSON.stringify({ ...body, deviceId: state.deviceId }) : null
                 });
                 const response = await res.json();
-                if (response.status === 'session_expired') {
-                    showModal('Đăng xuất', response.message, '🛡️');
+                if (response.status === 'session_expired' || (response.status === 'error' && response.message === 'Unauthenticated')) {
+                    showModal('Đăng xuất', response.status === 'session_expired' ? response.message : 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', '🛡️');
                     localStorage.removeItem('qd_user'); 
                     document.getElementById('app-content').classList.add('hidden');
                     const authOverlay = document.getElementById('auth-overlay');
@@ -512,6 +512,7 @@
                 }
                 if (response.status === 'error' && !silent) showModal('Lỗi', response.message, '❌');
                 return response;
+
             } catch (e) {
                 console.error("API Error:", e);
                 if (!silent) showModal('Lỗi kết nối', 'Không thể kết nối tới máy chủ.\n\nLưu ý: Nếu dùng App Android, hãy vào mục Cài Đặt (bánh răng) để kiểm tra URL Server.', '🔴');
